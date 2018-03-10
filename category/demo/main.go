@@ -3,7 +3,7 @@ package main
 import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/smartwalle/dbs"
-	"github.com/smartwalle/category"
+	"github.com/smartwalle/m4go/category"
 	"fmt"
 )
 

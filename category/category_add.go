@@ -16,27 +16,27 @@ const (
 )
 
 // --------------------------------------------------------------------------------
-func (this *CategoryManager) AddRoot(cType int, name, description string, status int) (result *Category, err error) {
+func (this *Manager) AddRoot(cType int, name, description string, status int) (result *Category, err error) {
 	return this.addCategory(cType, k_ADD_CATEGORY_POSITION_ROOT, 0, name, description, status)
 }
 
 // AddToFirst 添加子分类，新添加的子分类位于子分类列表的前面
-func (this *CategoryManager) AddToFirst(referTo int64, name, description string, status int) (result *Category, err error) {
+func (this *Manager) AddToFirst(referTo int64, name, description string, status int) (result *Category, err error) {
 	return this.addCategory(-1, k_ADD_CATEGORY_POSITION_FIRST, referTo, name, description, status)
 }
 
 // AddToLast 添加子分类，新添加的子分类位于子分类列表的后面
-func (this *CategoryManager) AddToLast(referTo int64, name, description string, status int) (result *Category, err error) {
+func (this *Manager) AddToLast(referTo int64, name, description string, status int) (result *Category, err error) {
 	return this.addCategory(-1, k_ADD_CATEGORY_POSITION_LAST, referTo, name, description, status)
 }
 
 // AddToLeft 添加兄弟分类，新添加的分类位于指定分类的左边(前面)
-func (this *CategoryManager) AddToLeft(referTo int64, name, description string, status int) (result *Category, err error) {
+func (this *Manager) AddToLeft(referTo int64, name, description string, status int) (result *Category, err error) {
 	return this.addCategory(-1, k_ADD_CATEGORY_POSITION_LEFT, referTo, name, description, status)
 }
 
 // AddToRight 添加兄弟分类，新添加的分类位于指定分类的右边(后面)
-func (this *CategoryManager) AddToRight(referTo int64, name, description string, status int) (result *Category, err error) {
+func (this *Manager) AddToRight(referTo int64, name, description string, status int) (result *Category, err error) {
 	return this.addCategory(-1, k_ADD_CATEGORY_POSITION_RIGHT, referTo, name, description, status)
 }
 
@@ -45,7 +45,7 @@ func (this *CategoryManager) AddToRight(referTo int64, name, description string,
 // position 1、将新的分类添加到参照分类的子分类列表头部；2、将新的分类添加到参照分类的子分类列表尾部；3、将新的分类添加到参照分类的左边；4、将新的分类添加到参照分类的右边；
 // name 分类名
 // status 分类状态 1000、有效；2000、无效
-func (this *CategoryManager) addCategory(cType, position int, referTo int64, name, description string, status int) (result *Category, err error) {
+func (this *Manager) addCategory(cType, position int, referTo int64, name, description string, status int) (result *Category, err error) {
 	var sess = this.db
 
 	// 锁表
@@ -106,7 +106,7 @@ func (this *CategoryManager) addCategory(cType, position int, referTo int64, nam
 	return result, nil
 }
 
-func (this *CategoryManager) addCategoryWithPosition(tx *dbs.Tx, referCategory *Category, position int, name, description string, status int) (id int64, err error) {
+func (this *Manager) addCategoryWithPosition(tx *dbs.Tx, referCategory *Category, position int, name, description string, status int) (id int64, err error) {
 	switch position {
 	case k_ADD_CATEGORY_POSITION_ROOT:
 		return this.insertCategoryToRoot(tx, referCategory, name, description, status)
@@ -122,7 +122,7 @@ func (this *CategoryManager) addCategoryWithPosition(tx *dbs.Tx, referCategory *
 	return 0, errors.New("未知位置")
 }
 
-func (this *CategoryManager) insertCategoryToRoot(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
+func (this *Manager) insertCategoryToRoot(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
 	var leftValue = referCategory.RightValue + 1
 	var rightValue = referCategory.RightValue + 2
 	var cType = referCategory.Type
@@ -132,7 +132,7 @@ func (this *CategoryManager) insertCategoryToRoot(tx *dbs.Tx, referCategory *Cat
 	return id, nil
 }
 
-func (this *CategoryManager) insertCategoryToRight(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
+func (this *Manager) insertCategoryToRight(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
 	var ubLeft = dbs.NewUpdateBuilder()
 	ubLeft.Table(this.table)
 	ubLeft.SET("left_value", dbs.SQL("left_value+2"))
@@ -157,7 +157,7 @@ func (this *CategoryManager) insertCategoryToRight(tx *dbs.Tx, referCategory *Ca
 	return id, nil
 }
 
-func (this *CategoryManager) insertCategoryToLeft(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
+func (this *Manager) insertCategoryToLeft(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
 	var ubRight = dbs.NewUpdateBuilder()
 	ubRight.Table(this.table)
 	ubRight.SET("right_value", dbs.SQL("right_value+2"))
@@ -182,7 +182,7 @@ func (this *CategoryManager) insertCategoryToLeft(tx *dbs.Tx, referCategory *Cat
 	return id, nil
 }
 
-func (this *CategoryManager) insertCategoryToFirst(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
+func (this *Manager) insertCategoryToFirst(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
 	var ubRight = dbs.NewUpdateBuilder()
 	ubRight.Table(this.table)
 	ubRight.SET("right_value", dbs.SQL("right_value+2"))
@@ -207,7 +207,7 @@ func (this *CategoryManager) insertCategoryToFirst(tx *dbs.Tx, referCategory *Ca
 	return id, nil
 }
 
-func (this *CategoryManager) insertCategoryToLast(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
+func (this *Manager) insertCategoryToLast(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
 	var ubLeft = dbs.NewUpdateBuilder()
 	ubLeft.Table(this.table)
 	ubLeft.SET("left_value", dbs.SQL("left_value+2"))
@@ -233,7 +233,7 @@ func (this *CategoryManager) insertCategoryToLast(tx *dbs.Tx, referCategory *Cat
 	return id, nil
 }
 
-func (this *CategoryManager) insertCategory(tx *dbs.Tx, cType int, name, description string, leftValue, rightValue, status int) (id int64, err error) {
+func (this *Manager) insertCategory(tx *dbs.Tx, cType int, name, description string, leftValue, rightValue, status int) (id int64, err error) {
 	var now = time.Now()
 	var ib = dbs.NewInsertBuilder()
 	ib.Table(this.table)

@@ -5,7 +5,7 @@ import "github.com/smartwalle/dbs"
 // --------------------------------------------------------------------------------
 // GetCategory 获取分类信息
 // id 分类 id
-func (this *CategoryManager) GetCategory(id int64) (result *Category, err error) {
+func (this *Manager) GetCategory(id int64) (result *Category, err error) {
 	var tx = dbs.MustTx(this.db)
 
 	if result, err = this.getCategoryWithId(tx, id); err != nil {
@@ -18,7 +18,7 @@ func (this *CategoryManager) GetCategory(id int64) (result *Category, err error)
 	return result, nil
 }
 
-func (this *CategoryManager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, err error) {
+func (this *Manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "status", "created_on", "updated_on")
 	sb.From(this.table)
@@ -30,7 +30,7 @@ func (this *CategoryManager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Ca
 	return result, nil
 }
 
-func (this *CategoryManager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result *Category, err error) {
+func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "status", "created_on", "updated_on")
 	sb.From(this.table)
@@ -45,7 +45,7 @@ func (this *CategoryManager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int)
 	return result, nil
 }
 
-func (this *CategoryManager) GetCategoryList(cType, status int) (results []*Category, err error) {
+func (this *Manager) GetCategoryList(cType, status int) (results []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.status", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")

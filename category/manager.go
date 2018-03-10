@@ -4,13 +4,13 @@ import (
 	"github.com/smartwalle/dbs"
 )
 
-type CategoryManager struct {
+type Manager struct {
 	db    dbs.SQLExecutor
 	table string
 }
 
-func NewManager(db dbs.SQLExecutor, table string) *CategoryManager {
-	var cm = &CategoryManager{}
+func NewManager(db dbs.SQLExecutor, table string) *Manager {
+	var cm = &Manager{}
 	cm.db = db
 	cm.table = table
 	return cm
