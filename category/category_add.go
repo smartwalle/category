@@ -16,6 +16,7 @@ const (
 )
 
 // --------------------------------------------------------------------------------
+// AddRoot 添加顶级分类
 func (this *Manager) AddRoot(cType int, name, description string, status int) (result *Category, err error) {
 	return this.addCategory(cType, k_ADD_CATEGORY_POSITION_ROOT, 0, name, description, status)
 }
@@ -41,10 +42,16 @@ func (this *Manager) AddToRight(referTo int64, name, description string, status 
 }
 
 // addCategory 添加分类
-// referTo  参照分类 id，如果值等于 0，则表示添加顶级分类
-// position 1、将新的分类添加到参照分类的子分类列表头部；2、将新的分类添加到参照分类的子分类列表尾部；3、将新的分类添加到参照分类的左边；4、将新的分类添加到参照分类的右边；
-// name 分类名
-// status 分类状态 1000、有效；2000、无效
+// cType: 分类类型（分类组）
+// position:
+// 		1、将新的分类添加到参照分类的子分类列表头部；
+// 		2、将新的分类添加到参照分类的子分类列表尾部；
+// 		3、将新的分类添加到参照分类的左边；
+// 		4、将新的分类添加到参照分类的右边；
+// referTo: 参照分类 id，如果值等于 0，则表示添加顶级分类
+// name: 分类名
+// description: 描述
+// status: 分类状态 1000、有效；2000、无效
 func (this *Manager) addCategory(cType, position int, referTo int64, name, description string, status int) (result *Category, err error) {
 	var sess = this.db
 
