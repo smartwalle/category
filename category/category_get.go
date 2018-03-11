@@ -45,6 +45,10 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 	return result, nil
 }
 
+// GetCategoryList 获取分类列表
+// parentId: 父分类id，当此参数的值大于 0 的时候，将忽略 cType 参数
+// cType: 指定筛选分类的类型
+// status: 指定筛选分类的状态
 func (this *Manager) GetCategoryList(parentId int64, cType, status int) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.status", "c.created_on", "c.updated_on")
@@ -52,9 +56,10 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status int) (result 
 	if parentId > 0 {
 		sb.LeftJoin(this.table, "AS pc ON pc.left_value <= c.left_value AND pc.right_value >= c.right_value")
 		sb.Where("pc.id = ?", parentId)
-	}
-	if cType > 0 {
-		sb.Where("c.type = ?", cType)
+	} else {
+		if cType > 0 {
+			sb.Where("c.type = ?", cType)
+		}
 	}
 	if status > 0 {
 		sb.Where("c.status = ?", status)
