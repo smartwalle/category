@@ -1,6 +1,8 @@
 package category
 
-import "github.com/smartwalle/dbs"
+import (
+	"github.com/smartwalle/dbs"
+)
 
 // --------------------------------------------------------------------------------
 // GetCategory 获取分类信息
@@ -49,12 +51,13 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 // parentId: 父分类id，当此参数的值大于 0 的时候，将忽略 cType 参数
 // cType: 指定筛选分类的类型
 // status: 指定筛选分类的状态
-func (this *Manager) GetCategoryList(parentId int64, cType, status int) (result []*Category, err error) {
+// depth: 指定要获取多少级别内的分类
+func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
 	if parentId > 0 {
-		sb.LeftJoin(this.table, "AS pc ON pc.left_value <= c.left_value AND pc.right_value >= c.right_value")
+		sb.LeftJoin(this.table, "AS pc ON pc.left_value < c.left_value AND pc.right_value > c.right_value")
 		sb.Where("pc.id = ?", parentId)
 	} else {
 		if cType > 0 {
@@ -63,6 +66,13 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status int) (result 
 	}
 	if status > 0 {
 		sb.Where("c.status = ?", status)
+	}
+	if depth > 0 {
+		if parentId > 0 {
+			sb.Where("c.depth - pc.depth <= ?", depth)
+		} else {
+			sb.Where("c.depth <= ?", depth)
+		}
 	}
 	sb.OrderBy("c.type")
 	sb.OrderBy("c.left_value")
