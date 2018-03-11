@@ -20,7 +20,7 @@ func (this *Manager) GetCategory(id int64) (result *Category, err error) {
 
 func (this *Manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "status", "created_on", "updated_on")
+	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "depth", "status", "created_on", "updated_on")
 	sb.From(this.table)
 	sb.Where("id=?", id)
 	sb.Limit(1)
@@ -32,7 +32,7 @@ func (this *Manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, 
 
 func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "status", "created_on", "updated_on")
+	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "depth", "status", "created_on", "updated_on")
 	sb.From(this.table)
 	if cType > 0 {
 		sb.Where("type =? ", cType)
@@ -51,7 +51,7 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 // status: 指定筛选分类的状态
 func (this *Manager) GetCategoryList(parentId int64, cType, status int) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.status", "c.created_on", "c.updated_on")
+	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
 	if parentId > 0 {
 		sb.LeftJoin(this.table, "AS pc ON pc.left_value <= c.left_value AND pc.right_value >= c.right_value")

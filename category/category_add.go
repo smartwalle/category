@@ -84,9 +84,10 @@ func (this *Manager) addCategory(cType, position int, referTo int64, name, descr
 		if referCategory == nil {
 			referCategory = &Category{}
 			referCategory.Id = -1
+			referCategory.Type = cType
 			referCategory.LeftValue = 0
 			referCategory.RightValue = 0
-			referCategory.Type = cType
+			referCategory.Depth = 1
 		}
 	} else {
 		if referCategory, err = this.getCategoryWithId(tx, referTo); err != nil {
@@ -130,10 +131,11 @@ func (this *Manager) addCategoryWithPosition(tx *dbs.Tx, referCategory *Category
 }
 
 func (this *Manager) insertCategoryToRoot(tx *dbs.Tx, referCategory *Category, name, description string, status int) (id int64, err error) {
+	var cType = referCategory.Type
 	var leftValue = referCategory.RightValue + 1
 	var rightValue = referCategory.RightValue + 2
-	var cType = referCategory.Type
-	if id, err = this.insertCategory(tx, cType, name, description, leftValue, rightValue, status); err != nil {
+	var depth = referCategory.Depth
+	if id, err = this.insertCategory(tx, cType, name, description, leftValue, rightValue, depth, status); err != nil {
 		return 0, err
 	}
 	return id, nil
@@ -158,7 +160,7 @@ func (this *Manager) insertCategoryToRight(tx *dbs.Tx, referCategory *Category, 
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.RightValue+1, referCategory.RightValue+2, status); err != nil {
+	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.RightValue+1, referCategory.RightValue+2, referCategory.Depth, status); err != nil {
 		return 0, err
 	}
 	return id, nil
@@ -183,7 +185,7 @@ func (this *Manager) insertCategoryToLeft(tx *dbs.Tx, referCategory *Category, n
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.LeftValue, referCategory.LeftValue+1, status); err != nil {
+	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.LeftValue, referCategory.LeftValue+1, referCategory.Depth, status); err != nil {
 		return 0, err
 	}
 	return id, nil
@@ -208,7 +210,7 @@ func (this *Manager) insertCategoryToFirst(tx *dbs.Tx, referCategory *Category, 
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.LeftValue+1, referCategory.LeftValue+2, status); err != nil {
+	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.LeftValue+1, referCategory.LeftValue+2, referCategory.Depth+1, status); err != nil {
 		return 0, err
 	}
 	return id, nil
@@ -233,19 +235,19 @@ func (this *Manager) insertCategoryToLast(tx *dbs.Tx, referCategory *Category, n
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.RightValue, referCategory.RightValue+1, status); err != nil {
+	if id, err = this.insertCategory(tx, referCategory.Type, name, description, referCategory.RightValue, referCategory.RightValue+1, referCategory.Depth+1, status); err != nil {
 		return 0, err
 	}
 
 	return id, nil
 }
 
-func (this *Manager) insertCategory(tx *dbs.Tx, cType int, name, description string, leftValue, rightValue, status int) (id int64, err error) {
+func (this *Manager) insertCategory(tx *dbs.Tx, cType int, name, description string, leftValue, rightValue, depth, status int) (id int64, err error) {
 	var now = time.Now()
 	var ib = dbs.NewInsertBuilder()
 	ib.Table(this.table)
-	ib.Columns("type", "name", "description", "left_value", "right_value", "status", "created_on", "updated_on")
-	ib.Values(cType, name, description, leftValue, rightValue, status, now, now)
+	ib.Columns("type", "name", "description", "left_value", "right_value", "depth", "status", "created_on", "updated_on")
+	ib.Values(cType, name, description, leftValue, rightValue, depth, status, now, now)
 	if result, err := tx.ExecInsertBuilder(ib); err != nil {
 		return 0, err
 	} else {
