@@ -45,19 +45,25 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 	return result, nil
 }
 
-func (this *Manager) GetCategoryList(cType, status int) (results []*Category, err error) {
+func (this *Manager) GetCategoryList(parentId int64, cType, status int) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.status", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
+	if parentId > 0 {
+		sb.LeftJoin(this.table, "AS pc ON pc.left_value <= c.left_value AND pc.right_value >= c.right_value")
+		sb.Where("pc.id = ?", parentId)
+	}
 	if cType > 0 {
 		sb.Where("c.type = ?", cType)
 	}
 	if status > 0 {
 		sb.Where("c.status = ?", status)
 	}
-	err = sb.Scan(this.db, &results)
+	sb.OrderBy("c.type")
+	sb.OrderBy("c.left_value")
+	err = sb.Scan(this.db, &result)
 	if err != nil {
 		return nil, err
 	}
-	return results, nil
+	return result, nil
 }
