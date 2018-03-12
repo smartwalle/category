@@ -95,7 +95,7 @@ func (this *Manager) addCategory(cType, position int, referTo int64, name, descr
 		}
 		if referCategory == nil {
 			tx.Rollback()
-			return nil, errors.New("参照分类不存在")
+			return nil, ErrCategoryNotExists
 		}
 	}
 

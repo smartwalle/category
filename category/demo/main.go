@@ -12,7 +12,7 @@ func main() {
 
 	var cm = category.NewManager(pool.GetSession(), "category")
 
-	categoryList, err := cm.GetCategoryList(0, 0, category.K_CATEGORY_STATUS_DISABLE, 5)
+	categoryList, err := cm.GetCategoryList(39, 0, 0, 0)
 	if err != nil {
 		fmt.Println("err", err)
 		return
