@@ -57,7 +57,6 @@ func (this *Manager) addCategory(cType, position int, referTo int64, name, descr
 
 	// 锁表
 	var lock = dbs.WriteLock(this.table)
-	lock.WriteLock(this.table, "AS c")
 	if _, err = lock.Exec(sess); err != nil {
 		return nil, err
 	}

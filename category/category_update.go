@@ -31,7 +31,6 @@ func (this *Manager) UpdateCategoryStatus(id int64, status, updateType int) (err
 
 	// 锁表
 	var lock = dbs.WriteLock(this.table)
-	lock.WriteLock(this.table, "AS c")
 	if _, err = lock.Exec(sess); err != nil {
 		return err
 	}
@@ -120,7 +119,6 @@ func (this *Manager) UpdateCategoryParent(id, pid int64) (err error) {
 
 	// 锁表
 	var lock = dbs.WriteLock(this.table)
-	lock.WriteLock(this.table, "AS c")
 	if _, err = lock.Exec(sess); err != nil {
 		return err
 	}
