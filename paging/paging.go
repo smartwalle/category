@@ -90,15 +90,15 @@ func (this *Form) GetEndTime() *time.Time {
 }
 
 // --------------------------------------------------------------------------------
-// PagingValue 用于返回给客户端
-type PagingValue struct {
+// Paging 用于返回给客户端
+type Paging struct {
 	Total uint64      `json:"total"      sql:"total"` // 共有多少条数据
 	Page  uint64      `json:"page"       sql:"-"`     // 当前页码
 	Limit uint64      `json:"limit"      sql:"-"`     // 每页最大数据两
-	List  interface{} `json:"list"       sql:"-"`     // 当前页的数据
+	Data  interface{} `json:"data"       sql:"-"`     // 当前页的数据
 }
 
-func (this *PagingValue) GetPagingInfo() *PageInfo {
+func (this *Paging) GetPagingInfo() *PageInfo {
 	return pagingInfo(this.Total, this.Page, this.Limit)
 }
 
