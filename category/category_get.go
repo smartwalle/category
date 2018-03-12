@@ -89,3 +89,37 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int, n
 	}
 	return result, nil
 }
+
+func (this *Manager) GetParentList(id int64, status int) (result []*Category, err error) {
+	var sb = dbs.NewSelectBuilder()
+	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.created_on", "pc.updated_on")
+	sb.From(this.table, "AS c")
+	sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value < c.left_value AND pc.right_value > c.right_value")
+	sb.Where("c.id = ?", id)
+	if status > 0 {
+		sb.Where("pc.status = ?", status)
+	}
+	sb.OrderBy("pc.left_value")
+	err = sb.Scan(this.db, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (this *Manager) GetPathList(id int64, status int) (result []*Category, err error) {
+	var sb = dbs.NewSelectBuilder()
+	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.created_on", "pc.updated_on")
+	sb.From(this.table, "AS c")
+	sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value <= c.left_value AND pc.right_value >= c.right_value")
+	sb.Where("c.id = ?", id)
+	if status > 0 {
+		sb.Where("pc.status = ?", status)
+	}
+	sb.OrderBy("pc.left_value")
+	err = sb.Scan(this.db, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
