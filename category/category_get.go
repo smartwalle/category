@@ -22,9 +22,9 @@ func (this *Manager) GetCategory(id int64) (result *Category, err error) {
 
 func (this *Manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "depth", "status", "created_on", "updated_on")
+	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "depth", "status", "ext1", "ext2", "created_on", "updated_on")
 	sb.From(this.table)
-	sb.Where("id=?", id)
+	sb.Where("id = ?", id)
 	sb.Limit(1)
 	if err = tx.ExecSelectBuilder(sb, &result); err != nil {
 		return nil, err
@@ -34,10 +34,10 @@ func (this *Manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, 
 
 func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "depth", "status", "created_on", "updated_on")
+	sb.Selects("id", "type", "name", "description", "left_value", "right_value", "depth", "status", "ext1", "ext2", "created_on", "updated_on")
 	sb.From(this.table)
 	if cType > 0 {
-		sb.Where("type =? ", cType)
+		sb.Where("type = ?", cType)
 	}
 	sb.OrderBy("right_value DESC")
 	sb.Limit(1)
@@ -54,7 +54,7 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 // depth: 指定要获取多少级别内的分类
 func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int, name string, limit uint64) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.created_on", "c.updated_on")
+	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
 	if parentId > 0 {
 		sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value < c.left_value AND pc.right_value > c.right_value")
@@ -92,7 +92,7 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int, n
 
 func (this *Manager) GetParentList(id int64, status int) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.created_on", "pc.updated_on")
+	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.ext1", "pc.ext2", "pc.created_on", "pc.updated_on")
 	sb.From(this.table, "AS c")
 	sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value < c.left_value AND pc.right_value > c.right_value")
 	sb.Where("c.id = ?", id)
@@ -109,7 +109,7 @@ func (this *Manager) GetParentList(id int64, status int) (result []*Category, er
 
 func (this *Manager) GetPathList(id int64, status int) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.created_on", "pc.updated_on")
+	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.ext1", "pc.ext2", "pc.created_on", "pc.updated_on")
 	sb.From(this.table, "AS c")
 	sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value <= c.left_value AND pc.right_value >= c.right_value")
 	sb.Where("c.id = ?", id)

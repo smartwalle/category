@@ -6,11 +6,13 @@ import (
 )
 
 // UpdateCategory 更新分类信息
-func (this *Manager) UpdateCategory(id int64, name, description string) (err error) {
+func (this *Manager) UpdateCategory(id int64, name, description, ext1, ext2 string) (err error) {
 	var ub = dbs.NewUpdateBuilder()
 	ub.Table(this.table)
 	ub.SET("name", name)
 	ub.SET("description", description)
+	ub.SET("ext1", ext1)
+	ub.SET("ext2", ext2)
 	ub.Where("id = ?", id)
 	ub.Limit(1)
 	if _, err = ub.Exec(this.db); err != nil {

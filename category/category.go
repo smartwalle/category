@@ -16,6 +16,8 @@ type Category struct {
 	RightValue  int         `json:"right_value"               sql:"right_value"`
 	Depth       int         `json:"depth"                     sql:"depth"`
 	Status      int         `json:"status"                    sql:"status"`
+	Ext1        string      `json:"ext1"                      sql:"ext1"`
+	Ext2        string      `json:"ext2"                      sql:"ext2"`
 	CreatedOn   *time.Time  `json:"created_on,omitempty"      sql:"created_on"`
 	UpdatedOn   *time.Time  `json:"updated_on,omitempty"      sql:"updated_on"`
 	Children    []*Category `json:"children,omitempty"        sql:"-"`
