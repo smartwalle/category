@@ -34,7 +34,7 @@ CREATE TABLE `category` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `category_id_uindex` (`id`),
   KEY `category_type_index` (`type`)
-) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8
 
 
 ```
