@@ -10,8 +10,8 @@ type Manager struct {
 }
 
 func NewManager(db dbs.SQLExecutor, table string) *Manager {
-	var cm = &Manager{}
-	cm.db = db
-	cm.table = table
-	return cm
+	var m = &Manager{}
+	m.db = db
+	m.table = table
+	return m
 }
