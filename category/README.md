@@ -50,7 +50,7 @@ go get github.com/smartwalle/m4go/
 导入
 
 ```
-import "github.com/smartwalle/dbs"
+import "github.com/smartwalle/m4go"
 ```
 
 category.NewManager(...) 需要两个参数，一个是数据库连接对象，另一个是数据库中存放分类信息的表的名称
