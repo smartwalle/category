@@ -57,7 +57,7 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int) (
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
 	if parentId > 0 {
-		sb.LeftJoin(this.table, "AS pc ON pc.left_value < c.left_value AND pc.right_value > c.right_value")
+		sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value < c.left_value AND pc.right_value > c.right_value")
 		sb.Where("pc.id = ?", parentId)
 	} else {
 		if cType > 0 {
@@ -76,6 +76,7 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int) (
 	}
 	sb.OrderBy("c.type")
 	sb.OrderBy("c.left_value")
+
 	err = sb.Scan(this.db, &result)
 	if err != nil {
 		return nil, err
