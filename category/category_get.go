@@ -52,7 +52,7 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 // cType: 指定筛选分类的类型
 // status: 指定筛选分类的状态
 // depth: 指定要获取多少级别内的分类
-func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int) (result []*Category, err error) {
+func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int, name string, limit uint64) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
@@ -74,8 +74,14 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int) (
 			sb.Where("c.depth <= ?", depth)
 		}
 	}
+	if name != "" {
+		sb.Where("c.name = ?", name)
+	}
 	sb.OrderBy("c.type")
 	sb.OrderBy("c.left_value")
+	if limit > 0 {
+		sb.Limit(limit)
+	}
 
 	err = sb.Scan(this.db, &result)
 	if err != nil {

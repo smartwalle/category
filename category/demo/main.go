@@ -12,7 +12,7 @@ func main() {
 
 	var cm = category.NewManager(pool.GetSession(), "category")
 
-	categoryList, err := cm.GetCategoryList(39, 0, 0, 0)
+	categoryList, err := cm.GetCategoryList(39, 0, 0, 0, "", 0)
 	if err != nil {
 		fmt.Println("err", err)
 		return
@@ -22,4 +22,3 @@ func main() {
 		fmt.Println(category.Type, category.Id, category.Name, category.Description, category.LeftValue, category.RightValue)
 	}
 }
-
