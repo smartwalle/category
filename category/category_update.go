@@ -7,6 +7,7 @@ import (
 
 // --------------------------------------------------------------------------------
 const (
+	k_MOVE_CATEGORY_POSITION_ROOT  = 0 // 顶级分类
 	k_MOVE_CATEGORY_POSITION_FIRST = 1 // 列表头部 (子分类)
 	k_MOVE_CATEGORY_POSITION_LAST  = 2 // 列表尾部 (子分类)
 	k_MOVE_CATEGORY_POSITION_LEFT  = 3 // 左边 (兄弟分类)
@@ -120,6 +121,10 @@ func (this *Manager) UpdateCategoryStatus(id int64, status, updateType int) (err
 	return nil
 }
 
+func (this *Manager) MoveToRoot(id int64) (err error) {
+	return this.moveCategory(k_MOVE_CATEGORY_POSITION_ROOT, id, 0)
+}
+
 func (this *Manager) MoveToFirst(id, pid int64) (err error) {
 	return this.moveCategory(k_MOVE_CATEGORY_POSITION_FIRST, id, pid)
 }
@@ -168,9 +173,20 @@ func (this *Manager) moveCategory(position int, id, rid int64) (err error) {
 	}
 
 	// 判断参照分类是否存在
-	referCategory, err := this.getCategoryWithId(tx, rid)
-	if err != nil {
-		return err
+	var referCategory *Category
+	if position == k_MOVE_CATEGORY_POSITION_ROOT {
+		// 如果是添加顶级分类，那么参照分类为 right value 最大的
+		if referCategory, err = this.getCategoryWithMaxRightValue(tx, category.Type); err != nil {
+			return err
+		}
+		if referCategory != nil && referCategory.Id == category.Id {
+			tx.Rollback()
+			return nil
+		}
+	} else {
+		if referCategory, err = this.getCategoryWithId(tx, rid); err != nil {
+			return err
+		}
 	}
 	if referCategory == nil {
 		tx.Rollback()
@@ -247,6 +263,8 @@ func (this *Manager) moveCategoryWithPosition(tx *dbs.Tx, position int, category
 	}
 
 	switch position {
+	case k_MOVE_CATEGORY_POSITION_ROOT:
+		return this.moveToRight(tx, category, referCategory, updateIdList, nodeLen)
 	case k_MOVE_CATEGORY_POSITION_FIRST:
 		return this.moveToFirst(tx, category, referCategory, updateIdList, nodeLen)
 	case k_MOVE_CATEGORY_POSITION_LAST:
@@ -291,7 +309,7 @@ func (this *Manager) moveToFirst(tx *dbs.Tx, category, parent *Category, updateI
 	ubTree.Table(this.table)
 	ubTree.SET("left_value", dbs.SQL("left_value - ?", diff))
 	ubTree.SET("right_value", dbs.SQL("right_value - ?", diff))
-	ubTree.SET("depth", dbs.SQL("depth + ?",  diffDepth))
+	ubTree.SET("depth", dbs.SQL("depth + ?", diffDepth))
 	ubTree.SET("updated_on", time.Now())
 	ubTree.Where(dbs.IN("id", updateIdList))
 	if _, err = tx.ExecUpdateBuilder(ubTree); err != nil {
@@ -332,7 +350,7 @@ func (this *Manager) moveToLast(tx *dbs.Tx, category, parent *Category, updateId
 	ubTree.Table(this.table)
 	ubTree.SET("left_value", dbs.SQL("left_value - ?", diff))
 	ubTree.SET("right_value", dbs.SQL("right_value - ?", diff))
-	ubTree.SET("depth", dbs.SQL("depth + ?",  diffDepth))
+	ubTree.SET("depth", dbs.SQL("depth + ?", diffDepth))
 	ubTree.SET("updated_on", time.Now())
 	ubTree.Where(dbs.IN("id", updateIdList))
 	if _, err = tx.ExecUpdateBuilder(ubTree); err != nil {
@@ -373,7 +391,7 @@ func (this *Manager) moveToLeft(tx *dbs.Tx, category, referCategory *Category, u
 	ubTree.Table(this.table)
 	ubTree.SET("left_value", dbs.SQL("left_value - ?", diff))
 	ubTree.SET("right_value", dbs.SQL("right_value - ?", diff))
-	ubTree.SET("depth", dbs.SQL("depth + ?",  diffDepth))
+	ubTree.SET("depth", dbs.SQL("depth + ?", diffDepth))
 	ubTree.SET("updated_on", time.Now())
 	ubTree.Where(dbs.IN("id", updateIdList))
 	if _, err = tx.ExecUpdateBuilder(ubTree); err != nil {
@@ -412,7 +430,7 @@ func (this *Manager) moveToRight(tx *dbs.Tx, category, referCategory *Category, 
 	ubTree.Table(this.table)
 	ubTree.SET("left_value", dbs.SQL("left_value - ?", diff))
 	ubTree.SET("right_value", dbs.SQL("right_value - ?", diff))
-	ubTree.SET("depth", dbs.SQL("depth + ?",  diffDepth))
+	ubTree.SET("depth", dbs.SQL("depth + ?", diffDepth))
 	ubTree.SET("updated_on", time.Now())
 	ubTree.Where(dbs.IN("id", updateIdList))
 	if _, err = tx.ExecUpdateBuilder(ubTree); err != nil {
