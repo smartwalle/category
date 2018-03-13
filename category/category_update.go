@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+// --------------------------------------------------------------------------------
+const (
+	k_MOVE_CATEGORY_POSITION_FIRST = 1 // 列表头部 (子分类)
+	k_MOVE_CATEGORY_POSITION_LAST  = 2 // 列表尾部 (子分类)
+	k_MOVE_CATEGORY_POSITION_LEFT  = 3 // 左边 (兄弟分类)
+	k_MOVE_CATEGORY_POSITION_RIGHT = 4 // 右边 (兄弟分类)
+)
+
 // UpdateCategory 更新分类信息
 func (this *Manager) UpdateCategory(id int64, name, description, ext1, ext2 string) (err error) {
 	var ub = dbs.NewUpdateBuilder()
@@ -112,8 +120,24 @@ func (this *Manager) UpdateCategoryStatus(id int64, status, updateType int) (err
 	return nil
 }
 
-func (this *Manager) UpdateCategoryParent(id, pid int64) (err error) {
-	if id == pid {
+func (this *Manager) MoveToFirst(id, pid int64) (err error) {
+	return this.moveCategory(k_MOVE_CATEGORY_POSITION_FIRST, id, pid)
+}
+
+func (this *Manager) MoveToLast(id, pid int64) (err error) {
+	return this.moveCategory(k_MOVE_CATEGORY_POSITION_LAST, id, pid)
+}
+
+func (this *Manager) MoveToLeft(id, rid int64) (err error) {
+	return this.moveCategory(k_MOVE_CATEGORY_POSITION_LEFT, id, rid)
+}
+
+func (this *Manager) MoveToRight(id, rid int64) (err error) {
+	return this.moveCategory(k_MOVE_CATEGORY_POSITION_RIGHT, id, rid)
+}
+
+func (this *Manager) moveCategory(position int, id, rid int64) (err error) {
+	if id == rid {
 		return ErrParentNotAllowed
 	}
 
@@ -143,33 +167,33 @@ func (this *Manager) UpdateCategoryParent(id, pid int64) (err error) {
 		return ErrCategoryNotExists
 	}
 
-	// 判断目标父分类是否存在
-	parent, err := this.getCategoryWithId(tx, pid)
+	// 判断参照分类是否存在
+	referCategory, err := this.getCategoryWithId(tx, rid)
 	if err != nil {
 		return err
 	}
-	if parent == nil {
+	if referCategory == nil {
 		tx.Rollback()
 		return ErrParentCategoryNotExists
 	}
 
-	// 判断被移动分类和目标父分类是否属于同一 type
-	if parent.Type != category.Type {
+	// 判断被移动分类和目标参照分类是否属于同一 type
+	if referCategory.Type != category.Type {
 		tx.Rollback()
 		return ErrParentNotAllowed
 	}
 
-	// 循环连接问题，即 目标父分类 是 被移动分类 的子分类
-	if parent.LeftValue > category.LeftValue && parent.RightValue < category.RightValue {
+	// 循环连接问题，即 参照分类 是 被移动分类 的子分类
+	if referCategory.LeftValue > category.LeftValue && referCategory.RightValue < category.RightValue {
 		tx.Rollback()
 		return ErrParentNotAllowed
 	}
 
 	// 判断是否已经是子分类
-	if parent.LeftValue < category.LeftValue && parent.RightValue > category.RightValue && category.Depth - 1 == parent.Depth {
-		tx.Rollback()
-		return ErrParentNotAllowed
-	}
+	//if referCategory.LeftValue < category.LeftValue && referCategory.RightValue > category.RightValue && category.Depth - 1 == referCategory.Depth {
+	//	tx.Rollback()
+	//	return ErrParentNotAllowed
+	//}
 
 	// 查询出被移动分类的所有子分类
 	children, err := this.GetCategoryList(category.Id, 0, 0, 0, "", 0)
@@ -183,12 +207,24 @@ func (this *Manager) UpdateCategoryParent(id, pid int64) (err error) {
 		updateIdList = append(updateIdList, c.Id)
 	}
 
-	var diff = category.RightValue - category.LeftValue + 1
+	if err = this.moveCategoryWithPosition(tx, position, category, referCategory, updateIdList); err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (this *Manager) moveCategoryWithPosition(tx *dbs.Tx, position int, category, referCategory *Category, updateIdList []int64) (err error) {
+	var nodeLen = category.RightValue - category.LeftValue + 1
 
 	// 把要移动的节点及其子节点从原树中删除掉
 	var ubTreeLeft = dbs.NewUpdateBuilder()
 	ubTreeLeft.Table(this.table)
-	ubTreeLeft.SET("left_value", dbs.SQL("left_value - ?", diff))
+	ubTreeLeft.SET("left_value", dbs.SQL("left_value - ?", nodeLen))
 	ubTreeLeft.SET("updated_on", time.Now())
 	ubTreeLeft.Where("type = ? AND left_value > ?", category.Type, category.RightValue)
 	if _, err = tx.ExecUpdateBuilder(ubTreeLeft); err != nil {
@@ -196,53 +232,56 @@ func (this *Manager) UpdateCategoryParent(id, pid int64) (err error) {
 	}
 	var ubTreeRight = dbs.NewUpdateBuilder()
 	ubTreeRight.Table(this.table)
-	ubTreeRight.SET("right_value", dbs.SQL("right_value - ?", diff))
+	ubTreeRight.SET("right_value", dbs.SQL("right_value - ?", nodeLen))
 	ubTreeRight.SET("updated_on", time.Now())
 	ubTreeRight.Where("type = ? AND right_value > ?", category.Type, category.RightValue)
 	if _, err = tx.ExecUpdateBuilder(ubTreeRight); err != nil {
 		return err
 	}
 
-	//if parent.RightValue > category.RightValue {
-	//	if parent, err = this.getCategoryWithId(tx, parent.Id); err != nil {
-	//		return err
-	//	}
-	//}
-	if parent.LeftValue > category.RightValue {
-		parent.LeftValue -= diff
+	if referCategory.LeftValue > category.RightValue {
+		referCategory.LeftValue -= nodeLen
 	}
-	if parent.RightValue > category.RightValue {
-		parent.RightValue -= diff
+	if referCategory.RightValue > category.RightValue {
+		referCategory.RightValue -= nodeLen
 	}
 
+	switch position {
+	case k_MOVE_CATEGORY_POSITION_FIRST:
+		return this.moveToFirst(tx, category, referCategory, updateIdList, nodeLen)
+	case k_MOVE_CATEGORY_POSITION_LAST:
+		return this.moveToLast(tx, category, referCategory, updateIdList, nodeLen)
+	}
+	tx.Rollback()
+	return ErrUnknownPosition
+}
+
+func (this *Manager) moveToFirst(tx *dbs.Tx, category, parent *Category, updateIdList []int64, nodeLen int) (err error) {
 	// 移出空间用于存放被移动的节点及其子节点
-	ubTreeLeft = dbs.NewUpdateBuilder()
+	var ubTreeLeft = dbs.NewUpdateBuilder()
 	ubTreeLeft.Table(this.table)
-	ubTreeLeft.SET("left_value", dbs.SQL("left_value + ?", diff))
+	ubTreeLeft.SET("left_value", dbs.SQL("left_value + ?", nodeLen))
 	ubTreeLeft.SET("updated_on", time.Now())
-	ubTreeLeft.Where("type = ? AND left_value > ?", parent.Type, parent.RightValue)
+	ubTreeLeft.Where("type = ? AND left_value > ?", parent.Type, parent.LeftValue)
 	ubTreeLeft.Where(dbs.NotIn("id", updateIdList))
 	if _, err = tx.ExecUpdateBuilder(ubTreeLeft); err != nil {
 		return err
 	}
 
-	ubTreeRight = dbs.NewUpdateBuilder()
+	var ubTreeRight = dbs.NewUpdateBuilder()
 	ubTreeRight.Table(this.table)
-	ubTreeRight.SET("right_value", dbs.SQL("right_value + ?", diff))
+	ubTreeRight.SET("right_value", dbs.SQL("right_value + ?", nodeLen))
 	ubTreeRight.SET("updated_on", time.Now())
-	ubTreeRight.Where("type = ? AND right_value >= ?", parent.Type, parent.RightValue)
+	ubTreeRight.Where("type = ? AND right_value > ?", parent.Type, parent.LeftValue)
 	ubTreeRight.Where(dbs.NotIn("id", updateIdList))
 	if _, err = tx.ExecUpdateBuilder(ubTreeRight); err != nil {
 		return err
 	}
 
-	//if parent, err = this.getCategoryWithId(tx, parent.Id); err != nil {
-	//	return err
-	//}
-	parent.RightValue += diff
+	parent.RightValue += nodeLen
 
 	// 更新被移动节点的信息
-	diff = category.RightValue - parent.RightValue + 1
+	var diff = category.LeftValue - parent.LeftValue - 1
 	var diffDepth = parent.Depth - category.Depth + 1
 	var ubTree = dbs.NewUpdateBuilder()
 	ubTree.Table(this.table)
@@ -255,7 +294,44 @@ func (this *Manager) UpdateCategoryParent(id, pid int64) (err error) {
 		return err
 	}
 
-	if err = tx.Commit(); err != nil {
+	return nil
+}
+
+func (this *Manager) moveToLast(tx *dbs.Tx, category, parent *Category, updateIdList []int64, nodeLen int) (err error) {
+	// 移出空间用于存放被移动的节点及其子节点
+	var ubTreeLeft = dbs.NewUpdateBuilder()
+	ubTreeLeft.Table(this.table)
+	ubTreeLeft.SET("left_value", dbs.SQL("left_value + ?", nodeLen))
+	ubTreeLeft.SET("updated_on", time.Now())
+	ubTreeLeft.Where("type = ? AND left_value > ?", parent.Type, parent.RightValue)
+	ubTreeLeft.Where(dbs.NotIn("id", updateIdList))
+	if _, err = tx.ExecUpdateBuilder(ubTreeLeft); err != nil {
+		return err
+	}
+
+	var ubTreeRight = dbs.NewUpdateBuilder()
+	ubTreeRight.Table(this.table)
+	ubTreeRight.SET("right_value", dbs.SQL("right_value + ?", nodeLen))
+	ubTreeRight.SET("updated_on", time.Now())
+	ubTreeRight.Where("type = ? AND right_value >= ?", parent.Type, parent.RightValue)
+	ubTreeRight.Where(dbs.NotIn("id", updateIdList))
+	if _, err = tx.ExecUpdateBuilder(ubTreeRight); err != nil {
+		return err
+	}
+
+	parent.RightValue += nodeLen
+
+	// 更新被移动节点的信息
+	var diff = category.RightValue - parent.RightValue + 1
+	var diffDepth = parent.Depth - category.Depth + 1
+	var ubTree = dbs.NewUpdateBuilder()
+	ubTree.Table(this.table)
+	ubTree.SET("left_value", dbs.SQL("left_value - ?", diff))
+	ubTree.SET("right_value", dbs.SQL("right_value - ?", diff))
+	ubTree.SET("depth", dbs.SQL("depth + ?",  diffDepth))
+	ubTree.SET("updated_on", time.Now())
+	ubTree.Where(dbs.IN("id", updateIdList))
+	if _, err = tx.ExecUpdateBuilder(ubTree); err != nil {
 		return err
 	}
 

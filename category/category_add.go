@@ -1,7 +1,6 @@
 package category
 
 import (
-	"errors"
 	"github.com/smartwalle/dbs"
 	"time"
 )
@@ -135,7 +134,8 @@ func (this *Manager) addCategoryWithPosition(tx *dbs.Tx, referCategory *Category
 	case k_ADD_CATEGORY_POSITION_RIGHT:
 		return this.insertCategoryToRight(tx, referCategory, name, description, ext1, ext2, status)
 	}
-	return 0, errors.New("未知位置")
+	tx.Rollback()
+	return 0, ErrUnknownPosition
 }
 
 func (this *Manager) insertCategoryToRoot(tx *dbs.Tx, referCategory *Category, name, description, ext1, ext2 string, status int) (id int64, err error) {
