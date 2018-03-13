@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	var db, _ = sql.Open("mysql", "root:smok2015@tcp(192.168.192.250:3306)/titan_dev?parseTime=true")
+	var db, _ = sql.Open("mysql", "")
 	var cm = category.NewManager(db, "category")
 
 	categoryList, err := cm.GetCategoryList(0, 0, 0, 0, "", 0)
