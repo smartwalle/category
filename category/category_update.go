@@ -251,6 +251,10 @@ func (this *Manager) moveCategoryWithPosition(tx *dbs.Tx, position int, category
 		return this.moveToFirst(tx, category, referCategory, updateIdList, nodeLen)
 	case k_MOVE_CATEGORY_POSITION_LAST:
 		return this.moveToLast(tx, category, referCategory, updateIdList, nodeLen)
+	case k_MOVE_CATEGORY_POSITION_LEFT:
+		return this.moveToLeft(tx, category, referCategory, updateIdList, nodeLen)
+	case k_MOVE_CATEGORY_POSITION_RIGHT:
+		return this.moveToRight(tx, category, referCategory, updateIdList, nodeLen)
 	}
 	tx.Rollback()
 	return ErrUnknownPosition
@@ -335,5 +339,50 @@ func (this *Manager) moveToLast(tx *dbs.Tx, category, parent *Category, updateId
 		return err
 	}
 
+	return nil
+}
+
+func (this *Manager) moveToLeft(tx *dbs.Tx, category, referCategory *Category, updateIdList []int64, nodeLen int) (err error) {
+	// 移出空间用于存放被移动的节点及其子节点
+	var ubTreeLeft = dbs.NewUpdateBuilder()
+	ubTreeLeft.Table(this.table)
+	ubTreeLeft.SET("left_value", dbs.SQL("left_value + ?", nodeLen))
+	ubTreeLeft.SET("updated_on", time.Now())
+	ubTreeLeft.Where("type = ? AND left_value >= ?", referCategory.Type, referCategory.LeftValue)
+	ubTreeLeft.Where(dbs.NotIn("id", updateIdList))
+	if _, err = tx.ExecUpdateBuilder(ubTreeLeft); err != nil {
+		return err
+	}
+
+	var ubTreeRight = dbs.NewUpdateBuilder()
+	ubTreeRight.Table(this.table)
+	ubTreeRight.SET("right_value", dbs.SQL("right_value + ?", nodeLen))
+	ubTreeRight.SET("updated_on", time.Now())
+	ubTreeRight.Where("type = ? AND right_value >= ?", referCategory.Type, referCategory.LeftValue)
+	ubTreeRight.Where(dbs.NotIn("id", updateIdList))
+	if _, err = tx.ExecUpdateBuilder(ubTreeRight); err != nil {
+		return err
+	}
+
+	//referCategory.LeftValue += nodeLen
+
+	// 更新被移动节点的信息
+	var diff = category.LeftValue - referCategory.LeftValue
+	var diffDepth = referCategory.Depth - category.Depth
+	var ubTree = dbs.NewUpdateBuilder()
+	ubTree.Table(this.table)
+	ubTree.SET("left_value", dbs.SQL("left_value - ?", diff))
+	ubTree.SET("right_value", dbs.SQL("right_value - ?", diff))
+	ubTree.SET("depth", dbs.SQL("depth + ?",  diffDepth))
+	ubTree.SET("updated_on", time.Now())
+	ubTree.Where(dbs.IN("id", updateIdList))
+	if _, err = tx.ExecUpdateBuilder(ubTree); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (this *Manager) moveToRight(tx *dbs.Tx, category, parent *Category, updateIdList []int64, nodeLen int) (err error) {
 	return nil
 }
