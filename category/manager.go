@@ -5,11 +5,11 @@ import (
 )
 
 type Manager struct {
-	db    dbs.SQLExecutor
+	db    dbs.DB
 	table string
 }
 
-func NewManager(db dbs.SQLExecutor, table string) *Manager {
+func NewManager(db dbs.DB, table string) *Manager {
 	var m = &Manager{}
 	m.db = db
 	m.table = table
