@@ -8,21 +8,21 @@ const (
 )
 
 type Category struct {
-	Id          int64       `json:"id"                        sql:"id"`
-	Type        int         `json:"type"                      sql:"type"`
-	Name        string      `json:"name"                      sql:"name"`
-	Description string      `json:"description"               sql:"description"`
-	LeftValue   int         `json:"left_value"                sql:"left_value"`
-	RightValue  int         `json:"right_value"               sql:"right_value"`
-	Depth       int         `json:"depth"                     sql:"depth"`
-	Status      int         `json:"status"                    sql:"status"`
-	Ext1        string      `json:"ext1"                      sql:"ext1"`
-	Ext2        string      `json:"ext2"                      sql:"ext2"`
-	CreatedOn   *time.Time  `json:"created_on,omitempty"      sql:"created_on"`
-	UpdatedOn   *time.Time  `json:"updated_on,omitempty"      sql:"updated_on"`
+	Id          int64      `json:"id"                        sql:"id"`
+	Type        int        `json:"type"                      sql:"type"`
+	Name        string     `json:"name"                      sql:"name"`
+	Description string     `json:"description"               sql:"description"`
+	LeftValue   int        `json:"left_value"                sql:"left_value"`
+	RightValue  int        `json:"right_value"               sql:"right_value"`
+	Depth       int        `json:"depth"                     sql:"depth"`
+	Status      int        `json:"status"                    sql:"status"`
+	Ext1        string     `json:"ext1"                      sql:"ext1"`
+	Ext2        string     `json:"ext2"                      sql:"ext2"`
+	CreatedOn   *time.Time `json:"created_on,omitempty"      sql:"created_on"`
+	UpdatedOn   *time.Time `json:"updated_on,omitempty"      sql:"updated_on"`
 	//NodeList    []*Category `json:"node_list,omitempty"       sql:"-"`
 }
 
 func (this *Category) IsLeafNode() bool {
-	return this.LeftValue + 1 == this.RightValue
+	return this.LeftValue+1 == this.RightValue
 }

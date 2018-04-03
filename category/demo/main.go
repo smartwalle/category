@@ -1,10 +1,10 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/smartwalle/m4go/category"
-	"fmt"
-	"database/sql"
 )
 
 func main() {
