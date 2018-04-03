@@ -56,17 +56,6 @@ func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int, n
 	return this.getCategoryList(parentId, cType, status, depth, name, limit, false)
 }
 
-func (this *Manager) GetCategoryIdList(parentId int64, status, depth int) (result []int64, err error) {
-	categoryList, err := this.getCategoryList(parentId, 0, status, depth, "", 0, true)
-	if err != nil {
-		return nil, err
-	}
-	for _, c := range categoryList {
-		result = append(result, c.Id)
-	}
-	return result, nil
-}
-
 func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, name string, limit uint64, includeParent bool) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
@@ -109,9 +98,21 @@ func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, n
 	return result, nil
 }
 
-// GetNodeList 获取指定分类的一级子分类
-func (this *Manager) GetNodeList(parentId int64, status int) (result []*Category, err error) {
-	return this.getCategoryList(parentId, 0, status, 1, "", 0, false)
+// GetNodeList 获取指定分类的子分类
+func (this *Manager) GetNodeList(parentId int64, status, depth int) (result []*Category, err error) {
+	return this.getCategoryList(parentId, 0, status, depth, "", 0, false)
+}
+
+// GetNodeIdList 获取指定分类的子分类 id 列表
+func (this *Manager) GetNodeIdList(parentId int64, status, depth int) (result []int64, err error) {
+	categoryList, err := this.getCategoryList(parentId, 0, status, depth, "", 0, false)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range categoryList {
+		result = append(result, c.Id)
+	}
+	return result, nil
 }
 
 // GetParentList 获取指定分类的父分类列表
