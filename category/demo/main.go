@@ -11,7 +11,7 @@ func main() {
 	var db, _ = sql.Open("mysql", "")
 	var cm = category.NewManager(db, "category")
 
-	categoryList, err := cm.GetCategoryList(0, 0, 0, 0, "", 0)
+	categoryList, err := cm.GetCategoryList(1, 0, 0, 0, "", 0)
 	if err != nil {
 		fmt.Println("err", err)
 		return
@@ -20,6 +20,4 @@ func main() {
 	for _, category := range categoryList {
 		fmt.Println(category.Type, category.Id, category.Name, category.Description, category.LeftValue, category.RightValue, category.Ext1, category.Ext2)
 	}
-
-	fmt.Println(cm.MoveToRoot(37))
 }

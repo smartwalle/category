@@ -109,10 +109,17 @@ func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, n
 	return result, nil
 }
 
+// GetNodeList 获取指定分类的一级子分类
+func (this *Manager) GetNodeList(parentId int64, status int) (result []*Category, err error) {
+	return this.getCategoryList(parentId, 0, status, 1, "", 0, false)
+}
+
+// GetParentList 获取指定分类的父分类列表
 func (this *Manager) GetParentList(id int64, status int) (result []*Category, err error) {
 	return this.getPathList(id, status, false)
 }
 
+// GetPathList 获取指定分类到 root 分类的完整分类列表，包括自身
 func (this *Manager) GetPathList(id int64, status int) (result []*Category, err error) {
 	return this.getPathList(id, status, true)
 }

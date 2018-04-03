@@ -20,5 +20,5 @@ type Category struct {
 	Ext2        string      `json:"ext2"                      sql:"ext2"`
 	CreatedOn   *time.Time  `json:"created_on,omitempty"      sql:"created_on"`
 	UpdatedOn   *time.Time  `json:"updated_on,omitempty"      sql:"updated_on"`
-	Children    []*Category `json:"children,omitempty"        sql:"-"`
+	NodeList    []*Category `json:"node_list,omitempty"       sql:"-"`
 }
