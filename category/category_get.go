@@ -47,12 +47,12 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 	return result, nil
 }
 
-// GetCategoryList 获取分类列表
+// GetCategoryAdvList 获取分类列表
 // parentId: 父分类id，当此参数的值大于 0 的时候，将忽略 cType 参数
 // cType: 指定筛选分类的类型
 // status: 指定筛选分类的状态
 // depth: 指定要获取多少级别内的分类
-func (this *Manager) GetCategoryList(parentId int64, cType, status, depth int, name string, limit uint64) (result []*Category, err error) {
+func (this *Manager) GetCategoryAdvList(parentId int64, cType, status, depth int, name string, limit uint64) (result []*Category, err error) {
 	return this.getCategoryList(parentId, cType, status, depth, name, limit, false)
 }
 
@@ -85,8 +85,7 @@ func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, n
 	if name != "" {
 		sb.Where("c.name = ?", name)
 	}
-	sb.OrderBy("c.type")
-	sb.OrderBy("c.left_value")
+	sb.OrderBy("c.type", "c.left_value")
 	if limit > 0 {
 		sb.Limit(limit)
 	}
@@ -105,7 +104,21 @@ func (this *Manager) GetNodeList(parentId int64, status, depth int) (result []*C
 
 // GetNodeIdList 获取指定分类的子分类 id 列表
 func (this *Manager) GetNodeIdList(parentId int64, status, depth int) (result []int64, err error) {
-	categoryList, err := this.getCategoryList(parentId, 0, status, depth, "", 0, false)
+	return this.getIdList(parentId, status, depth, false)
+}
+
+// GetCategoryList 获取指定分类的子分类列表，返回的列表包含指定的分类
+func (this *Manager) GetCategoryList(parentId int64, status, depth int) (result []*Category, err error) {
+	return this.getCategoryList(parentId, 0, status, depth, "", 0, true)
+}
+
+// GetIdList 获取指定分类的子分类 id 列表，返回的 id 列表包含指定的分类
+func (this *Manager) GetIdList(parentId int64, status, depth int) (result []int64, err error) {
+	return this.getIdList(parentId, status, depth, true)
+}
+
+func (this *Manager) getIdList(parentId int64, status, depth int, includeParent bool) (result []int64, err error) {
+	categoryList, err := this.getCategoryList(parentId, 0, status, depth, "", 0, includeParent)
 	if err != nil {
 		return nil, err
 	}
