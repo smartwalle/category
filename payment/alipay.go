@@ -19,7 +19,7 @@ func NewAliPay(appId, partnerId string, aliPublicKey, privateKey []byte, isProdu
 	return p
 }
 
-func (this *AliPay) CreatePayment(platform string, payment *Payment) (url string, err error) {
+func (this *AliPay) CreatePayment(method string, payment *Payment) (url string, err error) {
 	var productAmount float64 = 0
 	var productTax float64 = 0
 	for _, p := range payment.ProductList {
@@ -33,15 +33,32 @@ func (this *AliPay) CreatePayment(platform string, payment *Payment) (url string
 
 	var amount = productAmount + productTax + payment.Shipping
 
-	switch platform {
-	case K_PAYMENT_PLATFORM_WAP:
+	switch method {
+	case K_PAYMENT_METHOD_WAP:
 		return this.tradeWapPay(payment.OrderNo, subject, amount)
-	case K_PAYMENT_PLATFORM_APP:
+	case K_PAYMENT_METHOD_APP:
 		return this.tradeAppPay(payment.OrderNo, subject, amount)
+	case K_PAYMENT_METHOD_QRCODE:
+		return this.tradeQRCode(payment.OrderNo, subject, amount)
 	default:
 		return this.tradeWebPay(payment.OrderNo, subject, amount)
 	}
 	return "", err
+}
+
+func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url string, err error) {
+	var p = alipay.AliPayTradePagePay{}
+	p.OutTradeNo = orderNo
+	p.NotifyURL = this.NotifyURL
+	p.ReturnURL = this.ReturnURL
+	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
+	p.Subject = subject
+	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	rawURL, err := this.client.TradePagePay(p)
+	if err != nil {
+		return "", err
+	}
+	return rawURL.String(), err
 }
 
 func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url string, err error) {
@@ -70,17 +87,16 @@ func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64) (url st
 	return this.client.TradeAppPay(p)
 }
 
-func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url string, err error) {
-	var p = alipay.AliPayTradePagePay{}
+func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url string, err error) {
+	var p = alipay.AliPayTradePreCreate{}
 	p.OutTradeNo = orderNo
 	p.NotifyURL = this.NotifyURL
-	p.ReturnURL = this.ReturnURL
-	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
-	rawURL, err := this.client.TradePagePay(p)
+
+	result, err := this.client.TradePreCreate(p)
 	if err != nil {
 		return "", err
 	}
-	return rawURL.String(), err
+	return result.AliPayPreCreateResponse.QRCode, err
 }

@@ -18,8 +18,8 @@ func NewPayPal(clientId, secret string, isProduction bool) *PayPal {
 	return p
 }
 
-func (this *PayPal) CreatePayment(platform string, payment *Payment) (url string, err error) {
-	// PayPal 不用判断 platform
+func (this *PayPal) CreatePayment(method string, payment *Payment) (url string, err error) {
+	// PayPal 不用判断 method
 	var p = &paypal.Payment{}
 	p.Intent = paypal.K_PAYMENT_INTENT_SALE
 
