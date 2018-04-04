@@ -1,6 +1,7 @@
 package payment
 
 import (
+	"errors"
 	"fmt"
 	"github.com/smartwalle/alipay"
 	"strings"
@@ -96,11 +97,14 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url st
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
 
-	result, err := this.client.TradePreCreate(p)
+	rsp, err := this.client.TradePreCreate(p)
 	if err != nil {
 		return "", err
 	}
-	return result.AliPayPreCreateResponse.QRCode, err
+	if rsp.AliPayPreCreateResponse.Code != alipay.K_SUCCESS_CODE {
+		return "", errors.New(rsp.AliPayPreCreateResponse.SubMsg)
+	}
+	return rsp.AliPayPreCreateResponse.QRCode, err
 }
 
 func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount float64) (url string, err error) {
@@ -117,3 +121,45 @@ func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount fl
 	}
 	return result.AliPayTradePay.OutTradeNo, err
 }
+
+func (this *AliPay) TradeDetails(tradeNo string) (result *Trade, err error) {
+	var p = alipay.AliPayTradeQuery{}
+	p.TradeNo = tradeNo
+	rsp, err := this.client.TradeQuery(p)
+	if err != nil {
+		return nil, err
+	}
+
+	if rsp.AliPayTradeQuery.Code != alipay.K_SUCCESS_CODE {
+		return nil, errors.New(rsp.AliPayTradeQuery.SubMsg)
+	}
+
+	var trade = &Trade{}
+	trade.Platform = K_PLATFORM_ALIPAY
+	trade.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
+	trade.TradeNo = rsp.AliPayTradeQuery.TradeNo
+	trade.TradeStatus = rsp.AliPayTradeQuery.TradeStatus
+	trade.TotalAmount = rsp.AliPayTradeQuery.TotalAmount
+	trade.PayerId = rsp.AliPayTradeQuery.BuyerUserId
+	trade.PayerEmail = rsp.AliPayTradeQuery.BuyerLogonId
+	if trade.TradeStatus == "TRADE_SUCCESS" || trade.TradeStatus == "TRADE_FINISHED" {
+		trade.TradeSuccess = true
+	}
+	return trade, nil
+}
+
+//func (this *AliPay) PaymentCallBackHandler(req *http.Request) {
+//	noti, err := this.client.GetTradeNotification(req)
+//	if err != nil {
+//		return
+//	}
+//
+//	if this.client.NotifyVerify(noti.NotifyId) == false {
+//		return
+//	}
+//
+//	trade, err := this.TradeDetails(noti.TradeNo)
+//	if err != nil {
+//		return
+//	}
+//}

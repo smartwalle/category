@@ -97,3 +97,43 @@ func (this *PayPal) CreatePayment(method string, payment *Payment) (url string, 
 	}
 	return "", err
 }
+
+func (this *PayPal) TradeDetails(tradeNo string) (result *Trade, err error) {
+	rsp, err := this.client.GetPaymentDetails(tradeNo)
+	if err != nil {
+		return nil, err
+	}
+
+	if rsp.State == paypal.K_PAYMENT_STATE_CREATED {
+		if paymentRsp, err := this.client.ExecuteApprovedPayment(rsp.Id, rsp.Payer.PayerInfo.PayerId); err != nil {
+			return nil, err
+		} else {
+			rsp = paymentRsp
+		}
+	}
+
+	var trade = &Trade{}
+	trade.Platform = K_PLATFORM_PAYPAL
+	trade.TradeNo = rsp.Id
+	trade.TradeStatus = string(rsp.State)
+
+	if len(rsp.Transactions) > 0  {
+		var trans = rsp.Transactions[0]
+		trade.OrderNo = trans.InvoiceNumber
+		if trans.Amount != nil {
+			trade.TotalAmount = trans.Amount.Total
+		}
+		if rsp.Payer != nil && rsp.Payer.PayerInfo != nil {
+			trade.PayerId = rsp.Payer.PayerInfo.PayerId
+			trade.PayerEmail = rsp.Payer.PayerInfo.Email
+		}
+		if len(trans.RelatedResources) > 0 {
+			var relatedRes = trans.RelatedResources[0]
+			trade.TradeStatus = string(relatedRes.Sale.State)
+			if trade.TradeStatus == string(paypal.K_SALE_STATE_COMPLETED) {
+				trade.TradeSuccess = true
+			}
+		}
+	}
+	return trade, nil
+}

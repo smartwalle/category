@@ -10,6 +10,7 @@ const (
 
 type Method interface {
 	CreatePayment(method string, payment *Payment) (url string, err error)
+	TradeDetails(tradeNo string) (result *Trade, err error)
 }
 
 type ShippingAddress struct {
@@ -48,4 +49,20 @@ func (this *Payment) AddProduct(name, sku string, quantity int, price, tax float
 	p.Price = price
 	p.Tax = tax
 	this.ProductList = append(this.ProductList, p)
+}
+
+const (
+	K_PLATFORM_ALIPAY = "AliPay"
+	K_PLATFORM_PAYPAL = "PayPal"
+)
+
+type Trade struct {
+	Platform     string `json:"platform"`
+	OrderNo      string `json:"order_no"`
+	TradeNo      string `json:"trade_no"`
+	TradeStatus  string `json:"trade_status"`
+	TradeSuccess bool   `json:"paid_success"`
+	PayerId      string `json:"payer_id"`
+	PayerEmail   string `json:"payer_email"`
+	TotalAmount  string `json:"total_amount"`
 }
