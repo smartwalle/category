@@ -9,6 +9,7 @@ import (
 type AliPay struct {
 	client    *alipay.AliPay
 	ReturnURL string // 支付成功之后回调 URL
+	CancelURL string // 用户取消付款回调 URL
 	NotifyURL string
 }
 
@@ -48,6 +49,7 @@ func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url st
 	p.OutTradeNo = orderNo
 	p.NotifyURL = this.NotifyURL
 	p.ReturnURL = this.ReturnURL
+	p.QuitURL = this.CancelURL
 	p.ProductCode = "QUICK_WAP_WAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
