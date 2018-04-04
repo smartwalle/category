@@ -3,6 +3,7 @@ package payment
 import (
 	"fmt"
 	"github.com/smartwalle/paypal"
+	"github.com/smartwalle/ngx"
 )
 
 type PayPal struct {
@@ -18,16 +19,28 @@ func NewPayPal(clientId, secret string, isProduction bool) *PayPal {
 	return p
 }
 
+func (this *PayPal) Platform() string {
+	return K_PLATFORM_PAYPAL
+}
+
 func (this *PayPal) CreatePayment(method string, payment *Payment) (url string, err error) {
 	// PayPal 不用判断 method
 	var p = &paypal.Payment{}
 	p.Intent = paypal.K_PAYMENT_INTENT_SALE
 
+	var cancelURL = ngx.MustURL(this.CancelURL)
+	cancelURL.Add("order_no", payment.OrderNo)
+	cancelURL.Add("platform", this.Platform())
+
+	var returnURL = ngx.MustURL(this.ReturnURL)
+	returnURL.Add("platform", this.Platform())
+	returnURL.Add("order_no", payment.OrderNo)
+
 	p.Payer = &paypal.Payer{}
 	p.Payer.PaymentMethod = paypal.K_PAYMENT_METHOD_PAYPAL
 	p.RedirectURLs = &paypal.RedirectURLs{}
-	p.RedirectURLs.CancelURL = this.CancelURL
-	p.RedirectURLs.ReturnURL = this.ReturnURL
+	p.RedirectURLs.CancelURL = cancelURL.String()
+	p.RedirectURLs.ReturnURL = returnURL.String()
 	p.ExperienceProfileId = this.ExperienceProfileId
 
 	var transaction = &paypal.Transaction{}
@@ -113,7 +126,7 @@ func (this *PayPal) TradeDetails(tradeNo string) (result *Trade, err error) {
 	}
 
 	var trade = &Trade{}
-	trade.Platform = K_PLATFORM_PAYPAL
+	trade.Platform = this.Platform()
 	trade.TradeNo = rsp.Id
 	trade.TradeStatus = string(rsp.State)
 

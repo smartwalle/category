@@ -9,6 +9,7 @@ const (
 )
 
 type Method interface {
+	Platform() string
 	CreatePayment(method string, payment *Payment) (url string, err error)
 	TradeDetails(tradeNo string) (result *Trade, err error)
 }
@@ -52,8 +53,9 @@ func (this *Payment) AddProduct(name, sku string, quantity int, price, tax float
 }
 
 const (
-	K_PLATFORM_ALIPAY = "AliPay"
-	K_PLATFORM_PAYPAL = "PayPal"
+	K_PLATFORM_ALIPAY = "alipay"
+	K_PLATFORM_WXPAY  = "wxpay"
+	K_PLATFORM_PAYPAL = "paypal"
 )
 
 type Trade struct {

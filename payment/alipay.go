@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/smartwalle/alipay"
 	"strings"
+	"github.com/smartwalle/ngx"
 )
 
 type AliPay struct {
@@ -18,6 +19,10 @@ func NewAliPay(appId, partnerId string, aliPublicKey, privateKey []byte, isProdu
 	var p = &AliPay{}
 	p.client = alipay.New(appId, partnerId, aliPublicKey, privateKey, isProduction)
 	return p
+}
+
+func (this *AliPay) Platform() string {
+	return K_PLATFORM_ALIPAY
 }
 
 func (this *AliPay) CreatePayment(method string, payment *Payment) (url string, err error) {
@@ -52,8 +57,17 @@ func (this *AliPay) CreatePayment(method string, payment *Payment) (url string, 
 func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url string, err error) {
 	var p = alipay.AliPayTradePagePay{}
 	p.OutTradeNo = orderNo
-	p.NotifyURL = this.NotifyURL
-	p.ReturnURL = this.ReturnURL
+
+	var notifyURL = ngx.MustURL(this.NotifyURL)
+	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("order_no", orderNo)
+	p.NotifyURL = notifyURL.String()
+
+	var returnURL = ngx.MustURL(this.ReturnURL)
+	returnURL.Add("platform", this.Platform())
+	returnURL.Add("order_no", orderNo)
+	p.ReturnURL = returnURL.String()
+
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
@@ -67,9 +81,22 @@ func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url st
 func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url string, err error) {
 	var p = alipay.AliPayTradeWapPay{}
 	p.OutTradeNo = orderNo
-	p.NotifyURL = this.NotifyURL
-	p.ReturnURL = this.ReturnURL
-	p.QuitURL = this.CancelURL
+
+	var notifyURL = ngx.MustURL(this.NotifyURL)
+	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("order_no", orderNo)
+	p.NotifyURL = notifyURL.String()
+
+	var returnURL = ngx.MustURL(this.ReturnURL)
+	returnURL.Add("platform", this.Platform())
+	returnURL.Add("order_no", orderNo)
+	p.ReturnURL = returnURL.String()
+
+	var cancelURL = ngx.MustURL(this.CancelURL)
+	cancelURL.Add("order_no", orderNo)
+	cancelURL.Add("platform", this.Platform())
+	p.QuitURL = cancelURL.String()
+
 	p.ProductCode = "QUICK_WAP_WAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
@@ -83,7 +110,12 @@ func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url st
 func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64) (url string, err error) {
 	var p = alipay.AliPayTradeAppPay{}
 	p.OutTradeNo = orderNo
-	p.NotifyURL = this.NotifyURL
+
+	var notifyURL = ngx.MustURL(this.NotifyURL)
+	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("order_no", orderNo)
+	p.NotifyURL = notifyURL.String()
+
 	p.ProductCode = "QUICK_MSECURITY_PAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
@@ -93,7 +125,12 @@ func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64) (url st
 func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url string, err error) {
 	var p = alipay.AliPayTradePreCreate{}
 	p.OutTradeNo = orderNo
-	p.NotifyURL = this.NotifyURL
+
+	var notifyURL = ngx.MustURL(this.NotifyURL)
+	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("order_no", orderNo)
+	p.NotifyURL = notifyURL.String()
+
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
 
@@ -110,6 +147,12 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url st
 func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount float64) (url string, err error) {
 	var p = alipay.AliPayTradePay{}
 	p.OutTradeNo = orderNo
+
+	var notifyURL = ngx.MustURL(this.NotifyURL)
+	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("order_no", orderNo)
+	p.NotifyURL = notifyURL.String()
+
 	p.AuthCode = authCode
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
@@ -135,7 +178,7 @@ func (this *AliPay) TradeDetails(tradeNo string) (result *Trade, err error) {
 	}
 
 	var trade = &Trade{}
-	trade.Platform = K_PLATFORM_ALIPAY
+	trade.Platform = this.Platform()
 	trade.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
 	trade.TradeNo = rsp.AliPayTradeQuery.TradeNo
 	trade.TradeStatus = rsp.AliPayTradeQuery.TradeStatus

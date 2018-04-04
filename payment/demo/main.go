@@ -55,46 +55,46 @@ vTlWbWwZHVDP85dioLE9mfo5+Hh3SmHDi3TaVXjxeJsUgHkRgOX7
 
 func main() {
 	var ap = payment.NewAliPay(appID, partnerID, aliPublicKey, privateKey, false)
-	ap.ReturnURL = "http://tw.smartwalle.tk:5000/alipay"
+	ap.ReturnURL = "http://tw.smartwalle.tk:5000/return"
+	ap.CancelURL = "http://tw.smartwalle.tk:5000/cancel"
 	ap.NotifyURL = "http://tw.smartwalle.tk:5000/notify"
-	ap.CancelURL = "http://tw.smartwalle.tk:5000"
 
 	var pp = payment.NewPayPal("AS8XSa9JrOJ3rf0kxVqCgRLIlMpgaKhLTShpYxISysR1VpnN6AMLfrvj-upOMuNkXdb9bTIzsFH4umB5", "ECA3_usif2DUgGxgcBTddOKgg2rbjUT7J3B3-Ud9z9y54AK9mYTDDFyadmMLSo1QOiO2rci99FSq1PbZ", false)
-	pp.ReturnURL = "http://tw.smartwalle.tk:5000/paypal"
-	pp.CancelURL = "http://tw.smartwalle.tk:5000/paypal"
+	pp.ReturnURL = "http://tw.smartwalle.tk:5000/return"
+	pp.CancelURL = "http://tw.smartwalle.tk:5000/cancel"
 
 	http.HandleFunc("/notify", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("AliPay Notification")
+		fmt.Println("notification", req.FormValue("platform"), req.FormValue("order_no"))
 	})
 
-	http.HandleFunc("/alipay", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("AliPay Return")
-		req.ParseForm()
-
-		var tradeNo = req.FormValue("trade_no")
-		trade, err := ap.TradeDetails(tradeNo)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		tradeByte, _ := json.Marshal(trade)
-		w.Write(tradeByte)
+	http.HandleFunc("/cancel", func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("cancel", req.FormValue("platform"), req.FormValue("order_no"))
 	})
 
-	http.HandleFunc("/paypal", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("PayPal Return")
-		req.ParseForm()
+	http.HandleFunc("/return", func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("return", req.FormValue("platform"), req.FormValue("order_no"))
+		var platform = req.FormValue("platform")
+		if platform == "alipay" {
+			var tradeNo = req.FormValue("trade_no")
+			trade, err := ap.TradeDetails(tradeNo)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
 
-		var tradeNo = req.FormValue("paymentId")
-		trade, err := pp.TradeDetails(tradeNo)
-		if err != nil {
-			w.Write([]byte(err.Error()))
-			return
+			tradeByte, _ := json.Marshal(trade)
+			w.Write(tradeByte)
+		} else if platform == "paypal" {
+			var tradeNo = req.FormValue("paymentId")
+			trade, err := pp.TradeDetails(tradeNo)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			tradeByte, _ := json.Marshal(trade)
+			w.Write(tradeByte)
 		}
-
-		tradeByte, _ := json.Marshal(trade)
-		w.Write(tradeByte)
 	})
 
 	http.HandleFunc("/pay", func(w http.ResponseWriter, req *http.Request) {
