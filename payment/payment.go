@@ -4,7 +4,7 @@ const (
 	K_PAYMENT_METHOD_WEB    = "web"     // PC 浏览器
 	K_PAYMENT_METHOD_WAP    = "wap"     // 手机浏览器（支付宝）
 	K_PAYMENT_METHOD_APP    = "app"     // 生成支付参数，用于 App 上调用相关的 SDK 使用（支付宝）
-	K_PAYMENT_METHOD_QRCODE = "qr_code" // 提供二维码，供用户扫码进行支付（支付宝）
+	K_PAYMENT_METHOD_QRCODE = "qr_code" // 生成收款二维码，供用户扫码进行支付（支付宝）
 )
 
 type Method interface {
