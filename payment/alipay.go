@@ -40,6 +40,8 @@ func (this *AliPay) CreatePayment(method string, payment *Payment) (url string, 
 		return this.tradeAppPay(payment.OrderNo, subject, amount)
 	case K_PAYMENT_METHOD_QRCODE:
 		return this.tradeQRCode(payment.OrderNo, subject, amount)
+	case K_PAYMENT_METHOD_F2F:
+		return this.tradeFaceToFace(payment.OrderNo, payment.AuthCode, subject, amount)
 	default:
 		return this.tradeWebPay(payment.OrderNo, subject, amount)
 	}
@@ -99,4 +101,19 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url st
 		return "", err
 	}
 	return result.AliPayPreCreateResponse.QRCode, err
+}
+
+func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount float64) (url string, err error) {
+	var p = alipay.AliPayTradePay{}
+	p.OutTradeNo = orderNo
+	p.AuthCode = authCode
+	p.Subject = subject
+	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	p.Scene = "bar_code"
+
+	result, err := this.client.TradePay(p)
+	if err != nil {
+		return "", err
+	}
+	return result.AliPayTradePay.OutTradeNo, err
 }

@@ -54,13 +54,14 @@ func main() {
 	var p = payment.NewAliPay(appID, partnerID, aliPublicKey, privateKey, false)
 	p.ReturnURL = "http://www.baidu.com"
 	p.NotifyURL = "http://192.168.192.250:3000/paypal"
+	p.CancelURL = "http://www.baidu.com"
 
 	var pp = &payment.Payment{}
-	pp.OrderNo = "test_order_no2"
+	pp.OrderNo = "test_order_no2222222"
 	pp.Currency = "USD"
 	pp.Shipping = 199.99
 	pp.AddProduct("test", "sku001", 2, 99.99, 0)
 	pp.AddProduct("test", "sku001", 2, 99.99, 0)
 
-	fmt.Println(p.CreatePayment("web", pp))
+	fmt.Println(p.CreatePayment("f2f", pp))
 }
