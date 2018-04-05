@@ -32,12 +32,20 @@ func (this *Service) CreatePayment(channel string, order *Order) (url string, er
 	return p.CreateTradeOrder(order)
 }
 
-func (this *Service) TradeDetails(channel string, tradeNo string) (result *Trade, err error) {
+func (this *Service) GetTrade(channel string, tradeNo string) (result *Trade, err error) {
 	var p = this.channels[channel]
 	if p == nil {
 		return nil, ErrUnknownChannel
 	}
-	return p.TradeDetails(tradeNo)
+	return p.GetTrade(tradeNo)
+}
+
+func (this *Service) GetTradeWithOrderNo(channel string, orderNo string) (result *Trade, err error) {
+	var p = this.channels[channel]
+	if p == nil {
+		return nil, ErrUnknownChannel
+	}
+	return p.GetTradeWithOrderNo(orderNo)
 }
 
 func (this *Service) ReturnURLHandler(req *http.Request) (result *Trade, err error) {
@@ -60,7 +68,7 @@ func (this *Service) ReturnURLHandler(req *http.Request) (result *Trade, err err
 		return nil, ErrUnknownTradeNo
 	}
 
-	trade, err := p.TradeDetails(tradeNo)
+	trade, err := p.GetTrade(tradeNo)
 	if err != nil {
 		return nil, err
 	}

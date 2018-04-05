@@ -19,7 +19,8 @@ const (
 type PayChannel interface {
 	Identifier() string
 	CreateTradeOrder(order *Order) (url string, err error)
-	TradeDetails(tradeNo string) (result *Trade, err error)
+	GetTrade(tradeNo string) (result *Trade, err error)
+	GetTradeWithOrderNo(orderNo string) (result *Trade, err error)
 	NotifyHandler(req *http.Request) (result *Notification, err error)
 }
 
@@ -74,5 +75,4 @@ type Trade struct {
 }
 
 type Notification struct {
-
 }

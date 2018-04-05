@@ -113,7 +113,7 @@ func (this *PayPal) CreateTradeOrder(order *Order) (url string, err error) {
 	return "", err
 }
 
-func (this *PayPal) TradeDetails(tradeNo string) (result *Trade, err error) {
+func (this *PayPal) GetTrade(tradeNo string) (result *Trade, err error) {
 	rsp, err := this.client.GetPaymentDetails(tradeNo)
 	if err != nil {
 		return nil, err
@@ -151,6 +151,10 @@ func (this *PayPal) TradeDetails(tradeNo string) (result *Trade, err error) {
 		}
 	}
 	return result, nil
+}
+
+func (this *PayPal) GetTradeWithOrderNo(orderNo string) (result *Trade, err error) {
+	return nil, ErrPayPalNotAllowed
 }
 
 func (this *PayPal) NotifyHandler(req *http.Request) (result *Notification, err error) {

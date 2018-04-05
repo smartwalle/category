@@ -166,9 +166,35 @@ func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount fl
 	return result.AliPayTradePay.OutTradeNo, err
 }
 
-func (this *AliPay) TradeDetails(tradeNo string) (result *Trade, err error) {
+func (this *AliPay) GetTrade(tradeNo string) (result *Trade, err error) {
 	var p = alipay.AliPayTradeQuery{}
 	p.TradeNo = tradeNo
+	rsp, err := this.client.TradeQuery(p)
+	if err != nil {
+		return nil, err
+	}
+
+	if rsp.AliPayTradeQuery.Code != alipay.K_SUCCESS_CODE {
+		return nil, errors.New(rsp.AliPayTradeQuery.SubMsg)
+	}
+
+	result = &Trade{}
+	result.Platform = this.Identifier()
+	result.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
+	result.TradeNo = rsp.AliPayTradeQuery.TradeNo
+	result.TradeStatus = rsp.AliPayTradeQuery.TradeStatus
+	result.TotalAmount = rsp.AliPayTradeQuery.TotalAmount
+	result.PayerId = rsp.AliPayTradeQuery.BuyerUserId
+	result.PayerEmail = rsp.AliPayTradeQuery.BuyerLogonId
+	if result.TradeStatus == "TRADE_SUCCESS" || result.TradeStatus == "TRADE_FINISHED" {
+		result.TradeSuccess = true
+	}
+	return result, nil
+}
+
+func (this *AliPay) GetTradeWithOrderNo(orderNo string) (result *Trade, err error) {
+	var p = alipay.AliPayTradeQuery{}
+	p.OutTradeNo = orderNo
 	rsp, err := this.client.TradeQuery(p)
 	if err != nil {
 		return nil, err
