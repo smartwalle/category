@@ -1,5 +1,7 @@
 package payment
 
+import "net/http"
+
 const (
 	K_TRADE_METHOD_WEB    = "web"     // PC 浏览器
 	K_TRADE_METHOD_WAP    = "wap"     // 手机浏览器（支付宝）
@@ -18,6 +20,7 @@ type PayChannel interface {
 	Identifier() string
 	CreateTradeOrder(order *Order) (url string, err error)
 	TradeDetails(tradeNo string) (result *Trade, err error)
+	NotifyHandler(req *http.Request) (result *Notification, err error)
 }
 
 type ShippingAddress struct {
@@ -68,4 +71,8 @@ type Trade struct {
 	PayerId      string `json:"payer_id"`
 	PayerEmail   string `json:"payer_email"`
 	TotalAmount  string `json:"total_amount"`
+}
+
+type Notification struct {
+
 }

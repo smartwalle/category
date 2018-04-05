@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/smartwalle/ngx"
 	"github.com/smartwalle/paypal"
+	"net/http"
 )
 
 type PayPal struct {
@@ -126,28 +127,32 @@ func (this *PayPal) TradeDetails(tradeNo string) (result *Trade, err error) {
 		}
 	}
 
-	var trade = &Trade{}
-	trade.Platform = this.Identifier()
-	trade.TradeNo = rsp.Id
-	trade.TradeStatus = string(rsp.State)
+	result = &Trade{}
+	result.Platform = this.Identifier()
+	result.TradeNo = rsp.Id
+	result.TradeStatus = string(rsp.State)
 
 	if len(rsp.Transactions) > 0 {
 		var trans = rsp.Transactions[0]
-		trade.OrderNo = trans.InvoiceNumber
+		result.OrderNo = trans.InvoiceNumber
 		if trans.Amount != nil {
-			trade.TotalAmount = trans.Amount.Total
+			result.TotalAmount = trans.Amount.Total
 		}
 		if rsp.Payer != nil && rsp.Payer.PayerInfo != nil {
-			trade.PayerId = rsp.Payer.PayerInfo.PayerId
-			trade.PayerEmail = rsp.Payer.PayerInfo.Email
+			result.PayerId = rsp.Payer.PayerInfo.PayerId
+			result.PayerEmail = rsp.Payer.PayerInfo.Email
 		}
 		if len(trans.RelatedResources) > 0 {
 			var relatedRes = trans.RelatedResources[0]
-			trade.TradeStatus = string(relatedRes.Sale.State)
-			if trade.TradeStatus == string(paypal.K_SALE_STATE_COMPLETED) {
-				trade.TradeSuccess = true
+			result.TradeStatus = string(relatedRes.Sale.State)
+			if result.TradeStatus == string(paypal.K_SALE_STATE_COMPLETED) {
+				result.TradeSuccess = true
 			}
 		}
 	}
-	return trade, nil
+	return result, nil
+}
+
+func (this *PayPal) NotifyHandler(req *http.Request) (result *Notification, err error) {
+	return result, err
 }

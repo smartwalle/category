@@ -27,7 +27,7 @@ func (this *Service) RemoveChannel(channel string) {
 func (this *Service) CreatePayment(channel string, order *Order) (url string, err error) {
 	var p = this.channels[channel]
 	if p == nil {
-		return "", ErrUnknownPlatform
+		return "", ErrUnknownChannel
 	}
 	return p.CreateTradeOrder(order)
 }
@@ -35,7 +35,7 @@ func (this *Service) CreatePayment(channel string, order *Order) (url string, er
 func (this *Service) TradeDetails(channel string, tradeNo string) (result *Trade, err error) {
 	var p = this.channels[channel]
 	if p == nil {
-		return nil, ErrUnknownPlatform
+		return nil, ErrUnknownChannel
 	}
 	return p.TradeDetails(tradeNo)
 }
@@ -44,7 +44,7 @@ func (this *Service) ReturnURLCallbackHandler(req *http.Request) (result *Trade,
 	var channel = req.FormValue("channel")
 	var p = this.channels[channel]
 	if p == nil {
-		return nil, ErrUnknownPlatform
+		return nil, ErrUnknownChannel
 	}
 
 	var tradeNo = ""
@@ -63,5 +63,11 @@ func (this *Service) ReturnURLCallbackHandler(req *http.Request) (result *Trade,
 	return trade, nil
 }
 
-func (this *Service) NotifyURLCallbackHandler(req *http.Request) {
+func (this *Service) NotifyURLCallbackHandler(req *http.Request) (result *Notification, err error) {
+	var channel = req.FormValue("channel")
+	var p = this.channels[channel]
+	if p == nil {
+		return nil, ErrUnknownChannel
+	}
+	return p.NotifyHandler(req)
 }

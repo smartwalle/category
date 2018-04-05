@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/smartwalle/alipay"
 	"github.com/smartwalle/ngx"
+	"net/http"
 	"strings"
 )
 
@@ -177,32 +178,33 @@ func (this *AliPay) TradeDetails(tradeNo string) (result *Trade, err error) {
 		return nil, errors.New(rsp.AliPayTradeQuery.SubMsg)
 	}
 
-	var trade = &Trade{}
-	trade.Platform = this.Identifier()
-	trade.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
-	trade.TradeNo = rsp.AliPayTradeQuery.TradeNo
-	trade.TradeStatus = rsp.AliPayTradeQuery.TradeStatus
-	trade.TotalAmount = rsp.AliPayTradeQuery.TotalAmount
-	trade.PayerId = rsp.AliPayTradeQuery.BuyerUserId
-	trade.PayerEmail = rsp.AliPayTradeQuery.BuyerLogonId
-	if trade.TradeStatus == "TRADE_SUCCESS" || trade.TradeStatus == "TRADE_FINISHED" {
-		trade.TradeSuccess = true
+	result = &Trade{}
+	result.Platform = this.Identifier()
+	result.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
+	result.TradeNo = rsp.AliPayTradeQuery.TradeNo
+	result.TradeStatus = rsp.AliPayTradeQuery.TradeStatus
+	result.TotalAmount = rsp.AliPayTradeQuery.TotalAmount
+	result.PayerId = rsp.AliPayTradeQuery.BuyerUserId
+	result.PayerEmail = rsp.AliPayTradeQuery.BuyerLogonId
+	if result.TradeStatus == "TRADE_SUCCESS" || result.TradeStatus == "TRADE_FINISHED" {
+		result.TradeSuccess = true
 	}
-	return trade, nil
+	return result, nil
 }
 
-//func (this *AliPay) PaymentCallBackHandler(req *http.Request) {
-//	noti, err := this.client.GetTradeNotification(req)
-//	if err != nil {
-//		return
-//	}
-//
-//	if this.client.NotifyVerify(noti.NotifyId) == false {
-//		return
-//	}
-//
-//	trade, err := this.TradeDetails(noti.TradeNo)
-//	if err != nil {
-//		return
-//	}
-//}
+func (this *AliPay) NotifyHandler(req *http.Request) (result *Notification, err error) {
+	req.ParseForm()
+	delete(req.Form, "channel")
+	delete(req.Form, "order_no")
+
+	noti, err := this.client.GetTradeNotification(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if this.client.NotifyVerify(noti.NotifyId) == false {
+		return nil, ErrUnknownNotification
+	}
+
+	return result, err
+}

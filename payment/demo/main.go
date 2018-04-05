@@ -63,14 +63,13 @@ func main() {
 	pp.ReturnURL = "http://tw.smartwalle.tk:5000/return"
 	pp.CancelURL = "http://tw.smartwalle.tk:5000/cancel"
 
-
 	var ps = payment.NewService()
 	ps.RegisterChannel(ap)
 	ps.RegisterChannel(pp)
 
-
 	http.HandleFunc("/notify", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("notification", req.FormValue("channel"), req.FormValue("order_no"))
+		ps.NotifyURLCallbackHandler(req)
 	})
 
 	http.HandleFunc("/cancel", func(w http.ResponseWriter, req *http.Request) {
