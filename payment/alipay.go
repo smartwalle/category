@@ -163,7 +163,7 @@ func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount fl
 	if err != nil {
 		return "", err
 	}
-	return result.AliPayTradePay.OutTradeNo, err
+	return result.AliPayTradePay.TradeNo, err
 }
 
 func (this *AliPay) GetTrade(tradeNo string) (result *Trade, err error) {
