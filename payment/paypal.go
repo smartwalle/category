@@ -2,14 +2,15 @@ package payment
 
 import (
 	"fmt"
-	"github.com/smartwalle/paypal"
 	"github.com/smartwalle/ngx"
+	"github.com/smartwalle/paypal"
 )
 
 type PayPal struct {
 	client              *paypal.PayPal
 	ReturnURL           string // 支付成功之后回调 URL
 	CancelURL           string // 用户取消付款回调 URL
+	WebHookId           string
 	ExperienceProfileId string
 }
 
@@ -130,7 +131,7 @@ func (this *PayPal) TradeDetails(tradeNo string) (result *Trade, err error) {
 	trade.TradeNo = rsp.Id
 	trade.TradeStatus = string(rsp.State)
 
-	if len(rsp.Transactions) > 0  {
+	if len(rsp.Transactions) > 0 {
 		var trans = rsp.Transactions[0]
 		trade.OrderNo = trans.InvoiceNumber
 		if trans.Amount != nil {
