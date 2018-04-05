@@ -69,7 +69,7 @@ func main() {
 
 	http.HandleFunc("/notify", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("notification", req.FormValue("channel"), req.FormValue("order_no"))
-		ps.NotifyURLCallbackHandler(req)
+		ps.NotifyURLHandler(req)
 	})
 
 	http.HandleFunc("/cancel", func(w http.ResponseWriter, req *http.Request) {
@@ -79,7 +79,7 @@ func main() {
 	http.HandleFunc("/return", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("return", req.FormValue("channel"), req.FormValue("order_no"))
 
-		trade, err := ps.ReturnURLCallbackHandler(req)
+		trade, err := ps.ReturnURLHandler(req)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return

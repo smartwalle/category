@@ -40,7 +40,7 @@ func (this *Service) TradeDetails(channel string, tradeNo string) (result *Trade
 	return p.TradeDetails(tradeNo)
 }
 
-func (this *Service) ReturnURLCallbackHandler(req *http.Request) (result *Trade, err error) {
+func (this *Service) ReturnURLHandler(req *http.Request) (result *Trade, err error) {
 	var channel = req.FormValue("channel")
 	var p = this.channels[channel]
 	if p == nil {
@@ -56,6 +56,10 @@ func (this *Service) ReturnURLCallbackHandler(req *http.Request) (result *Trade,
 		tradeNo = req.FormValue("paymentId")
 	}
 
+	if tradeNo == "" {
+		return nil, ErrUnknownTradeNo
+	}
+
 	trade, err := p.TradeDetails(tradeNo)
 	if err != nil {
 		return nil, err
@@ -63,7 +67,7 @@ func (this *Service) ReturnURLCallbackHandler(req *http.Request) (result *Trade,
 	return trade, nil
 }
 
-func (this *Service) NotifyURLCallbackHandler(req *http.Request) (result *Notification, err error) {
+func (this *Service) NotifyURLHandler(req *http.Request) (result *Notification, err error) {
 	var channel = req.FormValue("channel")
 	var p = this.channels[channel]
 	if p == nil {
