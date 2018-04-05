@@ -1,11 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/smartwalle/m4go/payment"
 	"github.com/smartwalle/xid"
 	"net/http"
-	"encoding/json"
 )
 
 var (
@@ -63,60 +63,48 @@ func main() {
 	pp.ReturnURL = "http://tw.smartwalle.tk:5000/return"
 	pp.CancelURL = "http://tw.smartwalle.tk:5000/cancel"
 
+
+	var ps = payment.NewService()
+	ps.RegisterChannel(ap)
+	ps.RegisterChannel(pp)
+
+
 	http.HandleFunc("/notify", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("notification", req.FormValue("platform"), req.FormValue("order_no"))
+		fmt.Println("notification", req.FormValue("channel"), req.FormValue("order_no"))
 	})
 
 	http.HandleFunc("/cancel", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("cancel", req.FormValue("platform"), req.FormValue("order_no"))
+		fmt.Println("cancel", req.FormValue("channel"), req.FormValue("order_no"))
 	})
 
 	http.HandleFunc("/return", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Println("return", req.FormValue("platform"), req.FormValue("order_no"))
-		var platform = req.FormValue("platform")
-		if platform == "alipay" {
-			var tradeNo = req.FormValue("trade_no")
-			trade, err := ap.TradeDetails(tradeNo)
-			if err != nil {
-				w.Write([]byte(err.Error()))
-				return
-			}
+		fmt.Println("return", req.FormValue("channel"), req.FormValue("order_no"))
 
-			tradeByte, _ := json.Marshal(trade)
-			w.Write(tradeByte)
-		} else if platform == "paypal" {
-			var tradeNo = req.FormValue("paymentId")
-			trade, err := pp.TradeDetails(tradeNo)
-			if err != nil {
-				w.Write([]byte(err.Error()))
-				return
-			}
-
-			tradeByte, _ := json.Marshal(trade)
-			w.Write(tradeByte)
+		trade, err := ps.ReturnURLCallbackHandler(req)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
 		}
+		tradeByte, _ := json.Marshal(trade)
+		w.Write(tradeByte)
 	})
 
 	http.HandleFunc("/pay", func(w http.ResponseWriter, req *http.Request) {
-		var p = &payment.Payment{}
+		req.ParseForm()
+		var channel = req.FormValue("c")
+		var method = req.FormValue("m")
+
+		var p = &payment.Order{}
+		p.TradeMethod = method
 		p.OrderNo = xid.NewXID().Hex()
 		p.Currency = "USD"
 		p.Shipping = 199.99
 		p.AddProduct("test", "sku001", 2, 99.99, 0)
 
-		req.ParseForm()
-		var method = req.FormValue("m")
-		var platform = req.FormValue("p")
+		var url, err = ps.CreatePayment(channel, p)
 
-		var pm payment.Method = ap
-		if platform == "paypal" {
-			pm = pp
-		}
-
-		var url, err = pm.CreatePayment(method, p)
 		if err != nil {
 			w.Write([]byte(err.Error()))
-			w.WriteHeader(http.StatusOK)
 			return
 		}
 

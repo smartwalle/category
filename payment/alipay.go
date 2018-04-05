@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/smartwalle/alipay"
-	"strings"
 	"github.com/smartwalle/ngx"
+	"strings"
 )
 
 type AliPay struct {
@@ -21,35 +21,35 @@ func NewAliPay(appId, partnerId string, aliPublicKey, privateKey []byte, isProdu
 	return p
 }
 
-func (this *AliPay) Platform() string {
-	return K_PLATFORM_ALIPAY
+func (this *AliPay) Identifier() string {
+	return K_CHANNEL_ALIPAY
 }
 
-func (this *AliPay) CreatePayment(method string, payment *Payment) (url string, err error) {
+func (this *AliPay) CreateTradeOrder(order *Order) (url string, err error) {
 	var productAmount float64 = 0
 	var productTax float64 = 0
-	for _, p := range payment.ProductList {
+	for _, p := range order.ProductList {
 		productAmount += p.Price * float64(p.Quantity)
 		productTax += p.Tax * float64(p.Quantity)
 	}
-	var subject = strings.TrimSpace(payment.Subject)
+	var subject = strings.TrimSpace(order.Subject)
 	if subject == "" {
-		subject = payment.OrderNo
+		subject = order.OrderNo
 	}
 
-	var amount = productAmount + productTax + payment.Shipping
+	var amount = productAmount + productTax + order.Shipping
 
-	switch method {
-	case K_PAYMENT_METHOD_WAP:
-		return this.tradeWapPay(payment.OrderNo, subject, amount)
-	case K_PAYMENT_METHOD_APP:
-		return this.tradeAppPay(payment.OrderNo, subject, amount)
-	case K_PAYMENT_METHOD_QRCODE:
-		return this.tradeQRCode(payment.OrderNo, subject, amount)
-	case K_PAYMENT_METHOD_F2F:
-		return this.tradeFaceToFace(payment.OrderNo, payment.AuthCode, subject, amount)
+	switch order.TradeMethod {
+	case K_TRADE_METHOD_WAP:
+		return this.tradeWapPay(order.OrderNo, subject, amount)
+	case K_TRADE_METHOD_APP:
+		return this.tradeAppPay(order.OrderNo, subject, amount)
+	case K_TRADE_METHOD_QRCODE:
+		return this.tradeQRCode(order.OrderNo, subject, amount)
+	case K_TRADE_METHOD_F2F:
+		return this.tradeFaceToFace(order.OrderNo, order.AuthCode, subject, amount)
 	default:
-		return this.tradeWebPay(payment.OrderNo, subject, amount)
+		return this.tradeWebPay(order.OrderNo, subject, amount)
 	}
 	return "", err
 }
@@ -59,12 +59,12 @@ func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url st
 	p.OutTradeNo = orderNo
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
-	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("channel", this.Identifier())
 	notifyURL.Add("order_no", orderNo)
 	p.NotifyURL = notifyURL.String()
 
 	var returnURL = ngx.MustURL(this.ReturnURL)
-	returnURL.Add("platform", this.Platform())
+	returnURL.Add("channel", this.Identifier())
 	returnURL.Add("order_no", orderNo)
 	p.ReturnURL = returnURL.String()
 
@@ -83,18 +83,18 @@ func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url st
 	p.OutTradeNo = orderNo
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
-	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("channel", this.Identifier())
 	notifyURL.Add("order_no", orderNo)
 	p.NotifyURL = notifyURL.String()
 
 	var returnURL = ngx.MustURL(this.ReturnURL)
-	returnURL.Add("platform", this.Platform())
+	returnURL.Add("channel", this.Identifier())
 	returnURL.Add("order_no", orderNo)
 	p.ReturnURL = returnURL.String()
 
 	var cancelURL = ngx.MustURL(this.CancelURL)
+	cancelURL.Add("channel", this.Identifier())
 	cancelURL.Add("order_no", orderNo)
-	cancelURL.Add("platform", this.Platform())
 	p.QuitURL = cancelURL.String()
 
 	p.ProductCode = "QUICK_WAP_WAY"
@@ -112,7 +112,7 @@ func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64) (url st
 	p.OutTradeNo = orderNo
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
-	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("channel", this.Identifier())
 	notifyURL.Add("order_no", orderNo)
 	p.NotifyURL = notifyURL.String()
 
@@ -127,7 +127,7 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url st
 	p.OutTradeNo = orderNo
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
-	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("channel", this.Identifier())
 	notifyURL.Add("order_no", orderNo)
 	p.NotifyURL = notifyURL.String()
 
@@ -149,7 +149,7 @@ func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount fl
 	p.OutTradeNo = orderNo
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
-	notifyURL.Add("platform", this.Platform())
+	notifyURL.Add("channel", this.Identifier())
 	notifyURL.Add("order_no", orderNo)
 	p.NotifyURL = notifyURL.String()
 
@@ -178,7 +178,7 @@ func (this *AliPay) TradeDetails(tradeNo string) (result *Trade, err error) {
 	}
 
 	var trade = &Trade{}
-	trade.Platform = this.Platform()
+	trade.Platform = this.Identifier()
 	trade.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
 	trade.TradeNo = rsp.AliPayTradeQuery.TradeNo
 	trade.TradeStatus = rsp.AliPayTradeQuery.TradeStatus

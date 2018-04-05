@@ -3,5 +3,5 @@ package payment
 import "errors"
 
 var (
-	ErrSubjectNotAllowed = errors.New("subject 不能为空字符")
+	ErrUnknownPlatform = errors.New("未知的支付渠道")
 )

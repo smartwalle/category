@@ -20,22 +20,22 @@ func NewPayPal(clientId, secret string, isProduction bool) *PayPal {
 	return p
 }
 
-func (this *PayPal) Platform() string {
-	return K_PLATFORM_PAYPAL
+func (this *PayPal) Identifier() string {
+	return K_CHANNEL_PAYPAL
 }
 
-func (this *PayPal) CreatePayment(method string, payment *Payment) (url string, err error) {
+func (this *PayPal) CreateTradeOrder(order *Order) (url string, err error) {
 	// PayPal 不用判断 method
 	var p = &paypal.Payment{}
 	p.Intent = paypal.K_PAYMENT_INTENT_SALE
 
 	var cancelURL = ngx.MustURL(this.CancelURL)
-	cancelURL.Add("order_no", payment.OrderNo)
-	cancelURL.Add("platform", this.Platform())
+	cancelURL.Add("channel", this.Identifier())
+	cancelURL.Add("order_no", order.OrderNo)
 
 	var returnURL = ngx.MustURL(this.ReturnURL)
-	returnURL.Add("platform", this.Platform())
-	returnURL.Add("order_no", payment.OrderNo)
+	returnURL.Add("channel", this.Identifier())
+	returnURL.Add("order_no", order.OrderNo)
 
 	p.Payer = &paypal.Payer{}
 	p.Payer.PaymentMethod = paypal.K_PAYMENT_METHOD_PAYPAL
@@ -45,36 +45,36 @@ func (this *PayPal) CreatePayment(method string, payment *Payment) (url string, 
 	p.ExperienceProfileId = this.ExperienceProfileId
 
 	var transaction = &paypal.Transaction{}
-	transaction.InvoiceNumber = payment.OrderNo
+	transaction.InvoiceNumber = order.OrderNo
 	transaction.Amount = &paypal.Amount{}
-	transaction.Amount.Currency = payment.Currency
+	transaction.Amount.Currency = order.Currency
 	transaction.Amount.Details = &paypal.AmountDetails{}
 	transaction.Amount.Details.HandlingFee = "0"
 	transaction.Amount.Details.ShippingDiscount = "0"
 	transaction.Amount.Details.Insurance = "0"
 
-	if payment.ShippingAddress != nil {
+	if order.ShippingAddress != nil {
 		transaction.ItemList.ShippingAddress = &paypal.ShippingAddress{}
-		transaction.ItemList.ShippingAddress.Line1 = payment.ShippingAddress.Line1
-		transaction.ItemList.ShippingAddress.Line2 = payment.ShippingAddress.Line2
-		transaction.ItemList.ShippingAddress.City = payment.ShippingAddress.City
-		transaction.ItemList.ShippingAddress.State = payment.ShippingAddress.State
-		transaction.ItemList.ShippingAddress.CountryCode = payment.ShippingAddress.CountryCode
-		transaction.ItemList.ShippingAddress.PostalCode = payment.ShippingAddress.PostalCode
-		transaction.ItemList.ShippingAddress.Phone = payment.ShippingAddress.Phone
+		transaction.ItemList.ShippingAddress.Line1 = order.ShippingAddress.Line1
+		transaction.ItemList.ShippingAddress.Line2 = order.ShippingAddress.Line2
+		transaction.ItemList.ShippingAddress.City = order.ShippingAddress.City
+		transaction.ItemList.ShippingAddress.State = order.ShippingAddress.State
+		transaction.ItemList.ShippingAddress.CountryCode = order.ShippingAddress.CountryCode
+		transaction.ItemList.ShippingAddress.PostalCode = order.ShippingAddress.PostalCode
+		transaction.ItemList.ShippingAddress.Phone = order.ShippingAddress.Phone
 	}
 
 	var itemList = make([]*paypal.Item, 0, 0)
 	var productAmount float64 = 0
 	var productTax float64 = 0
-	for _, p := range payment.ProductList {
+	for _, p := range order.ProductList {
 		var item = &paypal.Item{}
 		item.Name = p.Name
 		item.Quantity = fmt.Sprintf("%d", p.Quantity)
 		item.Price = fmt.Sprintf("%.2f", p.Price)
 		item.Tax = fmt.Sprintf("%.2f", p.Tax)
 		item.SKU = p.SKU
-		item.Currency = payment.Currency
+		item.Currency = order.Currency
 		itemList = append(itemList, item)
 
 		productAmount += p.Price * float64(p.Quantity)
@@ -82,8 +82,8 @@ func (this *PayPal) CreatePayment(method string, payment *Payment) (url string, 
 	}
 	transaction.ItemList = &paypal.ItemList{Items: itemList}
 
-	if payment.Shipping > 0 {
-		transaction.Amount.Details.Shipping = fmt.Sprintf("%.2f", payment.Shipping)
+	if order.Shipping > 0 {
+		transaction.Amount.Details.Shipping = fmt.Sprintf("%.2f", order.Shipping)
 	} else {
 		transaction.Amount.Details.Shipping = "0.00"
 	}
@@ -94,7 +94,7 @@ func (this *PayPal) CreatePayment(method string, payment *Payment) (url string, 
 	}
 	transaction.Amount.Details.Subtotal = fmt.Sprintf("%.2f", productAmount)
 
-	var amount = productAmount + productTax + payment.Shipping
+	var amount = productAmount + productTax + order.Shipping
 	transaction.Amount.Total = fmt.Sprintf("%.2f", amount)
 
 	p.Transactions = []*paypal.Transaction{transaction}
@@ -127,7 +127,7 @@ func (this *PayPal) TradeDetails(tradeNo string) (result *Trade, err error) {
 	}
 
 	var trade = &Trade{}
-	trade.Platform = this.Platform()
+	trade.Platform = this.Identifier()
 	trade.TradeNo = rsp.Id
 	trade.TradeStatus = string(rsp.State)
 
