@@ -49,6 +49,8 @@ func (this *Service) GetTradeWithOrderNo(channel string, orderNo string) (result
 }
 
 func (this *Service) ReturnURLHandler(req *http.Request) (result *Trade, err error) {
+	req.ParseForm()
+
 	var channel = req.FormValue("channel")
 	var p = this.channels[channel]
 	if p == nil {
@@ -76,6 +78,8 @@ func (this *Service) ReturnURLHandler(req *http.Request) (result *Trade, err err
 }
 
 func (this *Service) NotifyURLHandler(req *http.Request) (result *Notification, err error) {
+	req.ParseForm()
+
 	var channel = req.FormValue("channel")
 	var p = this.channels[channel]
 	if p == nil {
