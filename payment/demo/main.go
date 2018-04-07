@@ -6,6 +6,7 @@ import (
 	"github.com/smartwalle/m4go/payment"
 	"github.com/smartwalle/xid"
 	"net/http"
+	"io/ioutil"
 )
 
 var (
@@ -73,6 +74,11 @@ func main() {
 
 	http.HandleFunc("/notify", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("notification", req.FormValue("channel"), req.FormValue("order_no"))
+
+		var body, _ = ioutil.ReadAll(req.Body)
+		fmt.Println(req.URL.String())
+		fmt.Println(string(body))
+
 		ps.NotifyURLHandler(req)
 	})
 
