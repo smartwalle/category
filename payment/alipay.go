@@ -186,7 +186,7 @@ func (this *AliPay) GetTrade(tradeNo string) (result *Trade, err error) {
 	result.TotalAmount = rsp.AliPayTradeQuery.TotalAmount
 	result.PayerId = rsp.AliPayTradeQuery.BuyerUserId
 	result.PayerEmail = rsp.AliPayTradeQuery.BuyerLogonId
-	if result.TradeStatus == "TRADE_SUCCESS" || result.TradeStatus == "TRADE_FINISHED" {
+	if result.TradeStatus == alipay.K_TRADE_STATUS_TRADE_SUCCESS || result.TradeStatus == alipay.K_TRADE_STATUS_TRADE_FINISHED {
 		result.TradeSuccess = true
 	}
 	return result, nil
@@ -212,7 +212,7 @@ func (this *AliPay) GetTradeWithOrderNo(orderNo string) (result *Trade, err erro
 	result.TotalAmount = rsp.AliPayTradeQuery.TotalAmount
 	result.PayerId = rsp.AliPayTradeQuery.BuyerUserId
 	result.PayerEmail = rsp.AliPayTradeQuery.BuyerLogonId
-	if result.TradeStatus == "TRADE_SUCCESS" || result.TradeStatus == "TRADE_FINISHED" {
+	if result.TradeStatus == alipay.K_TRADE_STATUS_TRADE_SUCCESS || result.TradeStatus == alipay.K_TRADE_STATUS_TRADE_FINISHED {
 		result.TradeSuccess = true
 	}
 	return result, nil

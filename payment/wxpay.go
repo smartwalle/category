@@ -5,6 +5,7 @@ import (
 	"github.com/smartwalle/wxpay"
 	"net/http"
 	"strings"
+	"fmt"
 )
 
 type WXPay struct {
@@ -114,13 +115,48 @@ func (this *WXPay) tradeQRCode(orderNo, subject, ip string, amount int) (url str
 	return rsp.CodeURL, nil
 }
 
-// TODO
 func (this *WXPay) GetTrade(tradeNo string) (result *Trade, err error) {
-	return
+	var p = wxpay.OrderQueryParam{}
+	p.TransactionId = tradeNo
+
+	rsp, err := this.client.OrderQuery(p)
+	if err != nil {
+		return nil, err
+	}
+
+	result = &Trade{}
+	result.Platform = this.Identifier()
+	result.OrderNo = rsp.OutTradeNo
+	result.TradeNo = rsp.TransactionId
+	result.TradeStatus = rsp.TradeState
+	result.TotalAmount = fmt.Sprintf("%.2f", float64(rsp.TotalFee) / 100.0)
+	result.PayerId = rsp.OpenId
+	if result.TradeStatus == wxpay.K_TRADE_STATUS_SUCCESS {
+		result.TradeSuccess = true
+	}
+	return result, nil
 }
 
 func (this *WXPay) GetTradeWithOrderNo(orderNo string) (result *Trade, err error) {
-	return
+	var p = wxpay.OrderQueryParam{}
+	p.OutTradeNo = orderNo
+
+	rsp, err := this.client.OrderQuery(p)
+	if err != nil {
+		return nil, err
+	}
+
+	result = &Trade{}
+	result.Platform = this.Identifier()
+	result.OrderNo = rsp.OutTradeNo
+	result.TradeNo = rsp.TransactionId
+	result.TradeStatus = rsp.TradeState
+	result.TotalAmount = fmt.Sprintf("%.2f", float64(rsp.TotalFee) / 100.0)
+	result.PayerId = rsp.OpenId
+	if result.TradeStatus == wxpay.K_TRADE_STATUS_SUCCESS {
+		result.TradeSuccess = true
+	}
+	return result, nil
 }
 
 func (this *WXPay) NotifyHandler(req *http.Request) (result *Notification, err error) {
