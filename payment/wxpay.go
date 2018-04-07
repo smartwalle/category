@@ -50,7 +50,7 @@ func (this *WXPay) CreateTradeOrder(order *Order) (url string, err error) {
 }
 
 func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount int) (url string, err error) {
-	var p = &wxpay.UnifiedOrderParam{}
+	var p = wxpay.UnifiedOrderParam{}
 	p.Body = subject
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
@@ -72,7 +72,7 @@ func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount int) (url str
 }
 
 func (this *WXPay) tradeAppPay(orderNo, subject, ip string, amount int) (url string, err error) {
-	var p = &wxpay.UnifiedOrderParam{}
+	var p = wxpay.UnifiedOrderParam{}
 	p.Body = subject
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
@@ -94,7 +94,7 @@ func (this *WXPay) tradeAppPay(orderNo, subject, ip string, amount int) (url str
 }
 
 func (this *WXPay) tradeQRCode(orderNo, subject, ip string, amount int) (url string, err error) {
-	var p = &wxpay.UnifiedOrderParam{}
+	var p = wxpay.UnifiedOrderParam{}
 	p.Body = subject
 
 	var notifyURL = ngx.MustURL(this.NotifyURL)
