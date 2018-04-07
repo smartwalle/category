@@ -63,9 +63,13 @@ func main() {
 	pp.ReturnURL = "http://tw.smartwalle.tk:5000/return"
 	pp.CancelURL = "http://tw.smartwalle.tk:5000/cancel"
 
+	var wp = payment.NewWXPal("wx20fa044851046bbf", "1v4h5g4s8u1x25tf451d025e10geagf2", "1299730801", false)
+	wp.NotifyURL = "http://tw.smartwalle.tk:5000/notify"
+
 	var ps = payment.NewService()
 	ps.RegisterChannel(ap)
 	ps.RegisterChannel(pp)
+	ps.RegisterChannel(wp)
 
 	http.HandleFunc("/notify", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("notification", req.FormValue("channel"), req.FormValue("order_no"))
@@ -97,8 +101,7 @@ func main() {
 		p.TradeMethod = method
 		p.OrderNo = xid.NewXID().Hex()
 		p.Currency = "USD"
-		p.Shipping = 199.99
-		p.AddProduct("test", "sku001", 2, 99.99, 0)
+		p.AddProduct("test", "sku001", 1, 1.01, 0)
 
 		var url, err = ps.CreatePayment(channel, p)
 
@@ -107,6 +110,7 @@ func main() {
 			return
 		}
 
+		fmt.Println(channel, method, url)
 		http.Redirect(w, req, url, http.StatusTemporaryRedirect)
 	})
 	http.ListenAndServe(":5000", nil)

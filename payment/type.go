@@ -5,8 +5,8 @@ import "net/http"
 const (
 	K_TRADE_METHOD_WEB    = "web"     // PC 浏览器
 	K_TRADE_METHOD_WAP    = "wap"     // 手机浏览器（支付宝）
-	K_TRADE_METHOD_APP    = "app"     // 生成支付参数，用于 App 上调用相关的 SDK 使用（支付宝）
-	K_TRADE_METHOD_QRCODE = "qr_code" // 生成收款二维码，供用户扫码进行支付（支付宝）
+	K_TRADE_METHOD_APP    = "app"     // 生成支付参数，用于 App 上调用相关的 SDK 使用（支付宝、微信支付）
+	K_TRADE_METHOD_QRCODE = "qr_code" // 生成收款二维码，供用户扫码进行支付（支付宝、微信支付）
 	K_TRADE_METHOD_F2F    = "f2f"     // 扫描用户的付款码进行收款
 )
 
@@ -51,6 +51,7 @@ type Order struct {
 	ShippingAddress *ShippingAddress // 收货地址信息（PayPal）
 	AuthCode        string           // 支付授权码，扫描用户的付款码获取（支付宝）
 	TradeMethod     string           // 支付方式（支付宝）
+	IP              string           // 用户端 IP（微信支付）
 }
 
 func (this *Order) AddProduct(name, sku string, quantity int, price, tax float64) {

@@ -64,6 +64,8 @@ func (this *Service) ReturnURLHandler(req *http.Request) (result *Trade, err err
 		tradeNo = req.FormValue("trade_no")
 	case K_CHANNEL_PAYPAL:
 		tradeNo = req.FormValue("paymentId")
+	case K_CHANNEL_WXPAY:
+		tradeNo = req.FormValue("transaction_id")
 	}
 
 	if tradeNo == "" {
