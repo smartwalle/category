@@ -223,7 +223,7 @@ func (this *AliPay) NotifyHandler(req *http.Request) (result *Notification, err 
 	delete(req.Form, "channel")
 	delete(req.Form, "order_no")
 
-	noti, err := this.client.GetTradeNotification(req.Form)
+	noti, err := this.client.GetTradeNotification(req)
 	if err != nil {
 		return nil, err
 	}
