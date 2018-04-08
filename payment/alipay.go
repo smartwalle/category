@@ -166,9 +166,10 @@ func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount fl
 	return result.AliPayTradePay.TradeNo, err
 }
 
-func (this *AliPay) GetTrade(tradeNo string) (result *Trade, err error) {
+func (this *AliPay) getTrade(tradeNo, orderNo string) (result *Trade, err error) {
 	var p = alipay.AliPayTradeQuery{}
 	p.TradeNo = tradeNo
+	p.OutTradeNo = orderNo
 	rsp, err := this.client.TradeQuery(p)
 	if err != nil {
 		return nil, err
@@ -192,30 +193,12 @@ func (this *AliPay) GetTrade(tradeNo string) (result *Trade, err error) {
 	return result, nil
 }
 
+func (this *AliPay) GetTrade(tradeNo string) (result *Trade, err error) {
+	return this.getTrade(tradeNo, "")
+}
+
 func (this *AliPay) GetTradeWithOrderNo(orderNo string) (result *Trade, err error) {
-	var p = alipay.AliPayTradeQuery{}
-	p.OutTradeNo = orderNo
-	rsp, err := this.client.TradeQuery(p)
-	if err != nil {
-		return nil, err
-	}
-
-	if rsp.AliPayTradeQuery.Code != alipay.K_SUCCESS_CODE {
-		return nil, errors.New(rsp.AliPayTradeQuery.SubMsg)
-	}
-
-	result = &Trade{}
-	result.Platform = this.Identifier()
-	result.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
-	result.TradeNo = rsp.AliPayTradeQuery.TradeNo
-	result.TradeStatus = rsp.AliPayTradeQuery.TradeStatus
-	result.TotalAmount = rsp.AliPayTradeQuery.TotalAmount
-	result.PayerId = rsp.AliPayTradeQuery.BuyerUserId
-	result.PayerEmail = rsp.AliPayTradeQuery.BuyerLogonId
-	if result.TradeStatus == alipay.K_TRADE_STATUS_TRADE_SUCCESS || result.TradeStatus == alipay.K_TRADE_STATUS_TRADE_FINISHED {
-		result.TradeSuccess = true
-	}
-	return result, nil
+	return this.getTrade("", orderNo)
 }
 
 func (this *AliPay) NotifyHandler(req *http.Request) (result *Notification, err error) {

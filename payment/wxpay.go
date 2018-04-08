@@ -49,7 +49,7 @@ func (this *WXPay) CreateTradeOrder(order *Order) (url string, err error) {
 	return "", err
 }
 
-func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount int) (url string, err error) {
+func (this *WXPay) trade(tradeType, orderNo, subject, ip string, amount int) (*wxpay.UnifiedOrderResp, error) {
 	var p = wxpay.UnifiedOrderParam{}
 	p.Body = subject
 
@@ -58,13 +58,21 @@ func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount int) (url str
 	notifyURL.Add("order_no", orderNo)
 	p.NotifyURL = notifyURL.String()
 
-	p.TradeType = wxpay.K_TRADE_TYPE_MWEB
+	p.TradeType = tradeType
 	p.SpbillCreateIP = ip
 
 	p.TotalFee = amount
 	p.OutTradeNo = orderNo
 
 	rsp, err := this.client.UnifiedOrder(p)
+	if err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount int) (url string, err error) {
+	rsp, err := this.trade(wxpay.K_TRADE_TYPE_MWEB, orderNo, subject, ip, amount)
 	if err != nil {
 		return "", err
 	}
@@ -72,21 +80,7 @@ func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount int) (url str
 }
 
 func (this *WXPay) tradeAppPay(orderNo, subject, ip string, amount int) (url string, err error) {
-	var p = wxpay.UnifiedOrderParam{}
-	p.Body = subject
-
-	var notifyURL = ngx.MustURL(this.NotifyURL)
-	notifyURL.Add("channel", this.Identifier())
-	notifyURL.Add("order_no", orderNo)
-	p.NotifyURL = notifyURL.String()
-
-	p.TradeType = wxpay.K_TRADE_TYPE_APP
-	p.SpbillCreateIP = ip
-
-	p.TotalFee = amount
-	p.OutTradeNo = orderNo
-
-	rsp, err := this.client.UnifiedOrder(p)
+	rsp, err := this.trade(wxpay.K_TRADE_TYPE_APP, orderNo, subject, ip, amount)
 	if err != nil {
 		return "", err
 	}
@@ -94,30 +88,17 @@ func (this *WXPay) tradeAppPay(orderNo, subject, ip string, amount int) (url str
 }
 
 func (this *WXPay) tradeQRCode(orderNo, subject, ip string, amount int) (url string, err error) {
-	var p = wxpay.UnifiedOrderParam{}
-	p.Body = subject
-
-	var notifyURL = ngx.MustURL(this.NotifyURL)
-	notifyURL.Add("channel", this.Identifier())
-	notifyURL.Add("order_no", orderNo)
-	p.NotifyURL = notifyURL.String()
-
-	p.TradeType = wxpay.K_TRADE_TYPE_NATIVE
-	p.SpbillCreateIP = ip
-
-	p.TotalFee = amount
-	p.OutTradeNo = orderNo
-
-	rsp, err := this.client.UnifiedOrder(p)
+	rsp, err := this.trade(wxpay.K_TRADE_TYPE_NATIVE, orderNo, subject, ip, amount)
 	if err != nil {
 		return "", err
 	}
 	return rsp.CodeURL, nil
 }
 
-func (this *WXPay) GetTrade(tradeNo string) (result *Trade, err error) {
+func (this *WXPay) getTrade(tradeNo, orderNo string) (result *Trade, err error) {
 	var p = wxpay.OrderQueryParam{}
 	p.TransactionId = tradeNo
+	p.OutTradeNo = orderNo
 
 	rsp, err := this.client.OrderQuery(p)
 	if err != nil {
@@ -137,26 +118,12 @@ func (this *WXPay) GetTrade(tradeNo string) (result *Trade, err error) {
 	return result, nil
 }
 
+func (this *WXPay) GetTrade(tradeNo string) (result *Trade, err error) {
+	return this.getTrade(tradeNo, "")
+}
+
 func (this *WXPay) GetTradeWithOrderNo(orderNo string) (result *Trade, err error) {
-	var p = wxpay.OrderQueryParam{}
-	p.OutTradeNo = orderNo
-
-	rsp, err := this.client.OrderQuery(p)
-	if err != nil {
-		return nil, err
-	}
-
-	result = &Trade{}
-	result.Platform = this.Identifier()
-	result.OrderNo = rsp.OutTradeNo
-	result.TradeNo = rsp.TransactionId
-	result.TradeStatus = rsp.TradeState
-	result.TotalAmount = fmt.Sprintf("%.2f", float64(rsp.TotalFee) / 100.0)
-	result.PayerId = rsp.OpenId
-	if result.TradeStatus == wxpay.K_TRADE_STATUS_SUCCESS {
-		result.TradeSuccess = true
-	}
-	return result, nil
+	return this.getTrade("", orderNo)
 }
 
 func (this *WXPay) NotifyHandler(req *http.Request) (result *Notification, err error) {
