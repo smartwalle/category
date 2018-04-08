@@ -160,9 +160,14 @@ func (this *WXPay) GetTradeWithOrderNo(orderNo string) (result *Trade, err error
 }
 
 func (this *WXPay) NotifyHandler(req *http.Request) (result *Notification, err error) {
-	req.ParseForm()
-	delete(req.Form, "channel")
-	delete(req.Form, "order_no")
+	noti, err := this.client.GetTradeNotification(req)
+	if err != nil {
+		return nil, err
+	}
 
-	return
+	fmt.Println(noti.OutTradeNo, noti.AppId)
+
+	// TODO 需要判断通知类型
+
+	return result, nil
 }

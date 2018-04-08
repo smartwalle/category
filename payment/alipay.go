@@ -232,5 +232,7 @@ func (this *AliPay) NotifyHandler(req *http.Request) (result *Notification, err 
 		return nil, ErrUnknownNotification
 	}
 
+	// TODO 需要判断通知类型
+
 	return result, err
 }
