@@ -52,6 +52,7 @@ type Order struct {
 	AuthCode        string           // 支付授权码，扫描用户的付款码获取（支付宝）
 	TradeMethod     string           // 支付方式（支付宝）
 	IP              string           // 用户端 IP（微信支付）
+	Timeout         int              // 支付超时时间，单位为分钟（支付宝、微信支付）
 }
 
 func (this *Order) AddProduct(name, sku string, quantity int, price, tax float64) {

@@ -42,20 +42,20 @@ func (this *AliPay) CreateTradeOrder(order *Order) (url string, err error) {
 
 	switch order.TradeMethod {
 	case K_TRADE_METHOD_WAP:
-		return this.tradeWapPay(order.OrderNo, subject, amount)
+		return this.tradeWapPay(order.OrderNo, subject, amount, order.Timeout)
 	case K_TRADE_METHOD_APP:
-		return this.tradeAppPay(order.OrderNo, subject, amount)
+		return this.tradeAppPay(order.OrderNo, subject, amount, order.Timeout)
 	case K_TRADE_METHOD_QRCODE:
-		return this.tradeQRCode(order.OrderNo, subject, amount)
+		return this.tradeQRCode(order.OrderNo, subject, amount, order.Timeout)
 	case K_TRADE_METHOD_F2F:
-		return this.tradeFaceToFace(order.OrderNo, order.AuthCode, subject, amount)
+		return this.tradeFaceToFace(order.OrderNo, order.AuthCode, subject, amount, order.Timeout)
 	default:
-		return this.tradeWebPay(order.OrderNo, subject, amount)
+		return this.tradeWebPay(order.OrderNo, subject, amount, order.Timeout)
 	}
 	return "", err
 }
 
-func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url string, err error) {
+func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradePagePay{}
 	p.OutTradeNo = orderNo
 
@@ -72,6 +72,11 @@ func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url st
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	if timeout > 0 {
+		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
+	}
+
 	rawURL, err := this.client.TradePagePay(p)
 	if err != nil {
 		return "", err
@@ -79,7 +84,7 @@ func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64) (url st
 	return rawURL.String(), err
 }
 
-func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url string, err error) {
+func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradeWapPay{}
 	p.OutTradeNo = orderNo
 
@@ -101,6 +106,10 @@ func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url st
 	p.ProductCode = "QUICK_WAP_WAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	if timeout > 0 {
+		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
+	}
+
 	rawURL, err := this.client.TradeWapPay(p)
 	if err != nil {
 		return "", err
@@ -108,7 +117,7 @@ func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64) (url st
 	return rawURL.String(), err
 }
 
-func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64) (url string, err error) {
+func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradeAppPay{}
 	p.OutTradeNo = orderNo
 
@@ -120,10 +129,13 @@ func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64) (url st
 	p.ProductCode = "QUICK_MSECURITY_PAY"
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	if timeout > 0 {
+		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
+	}
 	return this.client.TradeAppPay(p)
 }
 
-func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url string, err error) {
+func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradePreCreate{}
 	p.OutTradeNo = orderNo
 
@@ -134,6 +146,9 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url st
 
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	if timeout > 0 {
+		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
+	}
 
 	rsp, err := this.client.TradePreCreate(p)
 	if err != nil {
@@ -145,7 +160,7 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64) (url st
 	return rsp.AliPayPreCreateResponse.QRCode, err
 }
 
-func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount float64) (url string, err error) {
+func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount float64, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradePay{}
 	p.OutTradeNo = orderNo
 
@@ -158,6 +173,9 @@ func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount fl
 	p.Subject = subject
 	p.TotalAmount = fmt.Sprintf("%.2f", amount)
 	p.Scene = "bar_code"
+	if timeout > 0 {
+		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
+	}
 
 	result, err := this.client.TradePay(p)
 	if err != nil {

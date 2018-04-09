@@ -1,14 +1,16 @@
 package payment
 
 import (
+	"fmt"
 	"github.com/smartwalle/ngx"
 	"github.com/smartwalle/wxpay"
 	"net/http"
 	"strings"
-	"fmt"
+	"time"
 )
 
 type WXPay struct {
+	location  *time.Location
 	client    *wxpay.WXPay
 	NotifyURL string
 }
@@ -16,6 +18,11 @@ type WXPay struct {
 func NewWXPal(appId, apiKey, mchId string, isProduction bool) *WXPay {
 	var p = &WXPay{}
 	p.client = wxpay.New(appId, apiKey, mchId, isProduction)
+	loc, err := time.LoadLocation("Asia/Chongqing")
+	if err != nil {
+		loc = time.UTC
+	}
+	p.location = loc
 	return p
 }
 
@@ -39,17 +46,17 @@ func (this *WXPay) CreateTradeOrder(order *Order) (url string, err error) {
 
 	switch order.TradeMethod {
 	case K_TRADE_METHOD_WAP:
-		return this.tradeWapPay(order.OrderNo, subject, order.IP, amount)
+		return this.tradeWapPay(order.OrderNo, subject, order.IP, amount, order.Timeout)
 	case K_TRADE_METHOD_APP:
-		return this.tradeAppPay(order.OrderNo, subject, order.IP, amount)
+		return this.tradeAppPay(order.OrderNo, subject, order.IP, amount, order.Timeout)
 	case K_TRADE_METHOD_QRCODE:
-		return this.tradeQRCode(order.OrderNo, subject, order.IP, amount)
+		return this.tradeQRCode(order.OrderNo, subject, order.IP, amount, order.Timeout)
 
 	}
 	return "", err
 }
 
-func (this *WXPay) trade(tradeType, orderNo, subject, ip string, amount int) (*wxpay.UnifiedOrderResp, error) {
+func (this *WXPay) trade(tradeType, orderNo, subject, ip string, amount, timeout int) (*wxpay.UnifiedOrderResp, error) {
 	var p = wxpay.UnifiedOrderParam{}
 	p.Body = subject
 
@@ -64,6 +71,15 @@ func (this *WXPay) trade(tradeType, orderNo, subject, ip string, amount int) (*w
 	p.TotalFee = amount
 	p.OutTradeNo = orderNo
 
+	if timeout > 0 {
+		var offset time.Duration = 0
+		if this.location.String() == "UTC" {
+			offset = time.Hour * 8
+		}
+		var expire = time.Now().In(this.location).Add(time.Minute * time.Duration(timeout)).Add(offset)
+		p.TimeExpire = expire.Format("20060102150405")
+	}
+
 	rsp, err := this.client.UnifiedOrder(p)
 	if err != nil {
 		return nil, err
@@ -71,24 +87,24 @@ func (this *WXPay) trade(tradeType, orderNo, subject, ip string, amount int) (*w
 	return rsp, nil
 }
 
-func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount int) (url string, err error) {
-	rsp, err := this.trade(wxpay.K_TRADE_TYPE_MWEB, orderNo, subject, ip, amount)
+func (this *WXPay) tradeWapPay(orderNo, subject, ip string, amount, timeout int) (url string, err error) {
+	rsp, err := this.trade(wxpay.K_TRADE_TYPE_MWEB, orderNo, subject, ip, amount, timeout)
 	if err != nil {
 		return "", err
 	}
 	return rsp.MWebURL, nil
 }
 
-func (this *WXPay) tradeAppPay(orderNo, subject, ip string, amount int) (url string, err error) {
-	rsp, err := this.trade(wxpay.K_TRADE_TYPE_APP, orderNo, subject, ip, amount)
+func (this *WXPay) tradeAppPay(orderNo, subject, ip string, amount, timeout int) (url string, err error) {
+	rsp, err := this.trade(wxpay.K_TRADE_TYPE_APP, orderNo, subject, ip, amount, timeout)
 	if err != nil {
 		return "", err
 	}
 	return rsp.PrepayId, nil
 }
 
-func (this *WXPay) tradeQRCode(orderNo, subject, ip string, amount int) (url string, err error) {
-	rsp, err := this.trade(wxpay.K_TRADE_TYPE_NATIVE, orderNo, subject, ip, amount)
+func (this *WXPay) tradeQRCode(orderNo, subject, ip string, amount, timeout int) (url string, err error) {
+	rsp, err := this.trade(wxpay.K_TRADE_TYPE_NATIVE, orderNo, subject, ip, amount, timeout)
 	if err != nil {
 		return "", err
 	}
@@ -110,7 +126,7 @@ func (this *WXPay) getTrade(tradeNo, orderNo string) (result *Trade, err error) 
 	result.OrderNo = rsp.OutTradeNo
 	result.TradeNo = rsp.TransactionId
 	result.TradeStatus = rsp.TradeState
-	result.TotalAmount = fmt.Sprintf("%.2f", float64(rsp.TotalFee) / 100.0)
+	result.TotalAmount = fmt.Sprintf("%.2f", float64(rsp.TotalFee)/100.0)
 	result.PayerId = rsp.OpenId
 	if result.TradeStatus == wxpay.K_TRADE_STATUS_SUCCESS {
 		result.TradeSuccess = true
