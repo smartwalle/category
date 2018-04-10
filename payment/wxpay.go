@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	K_CHANNEL_WXPAY  = "wxpay"
+	K_CHANNEL_WXPAY = "wxpay"
 )
 
 const (

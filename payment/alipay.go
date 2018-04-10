@@ -42,7 +42,7 @@ func (this *AliPay) CreateTradeOrder(order *Order) (url string, err error) {
 		subject = order.OrderNo
 	}
 
-	var amount = fmt.Sprintf("%.2f", productAmount + productTax + order.Shipping - order.Discount)
+	var amount = fmt.Sprintf("%.2f", productAmount+productTax+order.Shipping-order.Discount)
 
 	switch order.TradeMethod {
 	case K_TRADE_METHOD_WAP:

@@ -111,7 +111,7 @@ func main() {
 		p.Currency = "USD"
 		p.Discount = 10
 		p.Shipping = 3333
-		for i:=0;i<3;i++ {
+		for i := 0; i < 3; i++ {
 			p.AddProduct("test", "sku001", 1, 10, 0)
 		}
 		p.Timeout = 3
