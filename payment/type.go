@@ -40,6 +40,7 @@ type Order struct {
 	OrderNo         string           // 必须 - 订单编号
 	Subject         string           // 必须 - 订单主题
 	Shipping        float64          // 运费
+	Discount        float64          // 减免金额
 	ProductList     []*Product       // 商品列表
 	Currency        string           // 货币名称，例如 USD（PayPal）
 	ShippingAddress *ShippingAddress // 收货地址信息（PayPal）

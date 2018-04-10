@@ -55,8 +55,8 @@ func (this *PayPal) CreateTradeOrder(order *Order) (url string, err error) {
 	transaction.Amount.Currency = order.Currency
 	transaction.Amount.Details = &paypal.AmountDetails{}
 	transaction.Amount.Details.HandlingFee = "0"
-	transaction.Amount.Details.ShippingDiscount = "0"
 	transaction.Amount.Details.Insurance = "0"
+	transaction.ItemList = &paypal.ItemList{}
 
 	if order.ShippingAddress != nil {
 		transaction.ItemList.ShippingAddress = &paypal.ShippingAddress{}
@@ -85,21 +85,14 @@ func (this *PayPal) CreateTradeOrder(order *Order) (url string, err error) {
 		productAmount += p.Price * float64(p.Quantity)
 		productTax += p.Tax * float64(p.Quantity)
 	}
-	transaction.ItemList = &paypal.ItemList{Items: itemList}
+	transaction.ItemList.Items = itemList
 
-	if order.Shipping > 0 {
-		transaction.Amount.Details.Shipping = fmt.Sprintf("%.2f", order.Shipping)
-	} else {
-		transaction.Amount.Details.Shipping = "0.00"
-	}
-	if productTax > 0 {
-		transaction.Amount.Details.Tax = fmt.Sprintf("%.2f", productTax)
-	} else {
-		transaction.Amount.Details.Tax = "0.00"
-	}
+	transaction.Amount.Details.Shipping = fmt.Sprintf("%.2f", order.Shipping)
+	transaction.Amount.Details.ShippingDiscount = fmt.Sprintf("%.2f", order.Discount)
+	transaction.Amount.Details.Tax = fmt.Sprintf("%.2f", productTax)
 	transaction.Amount.Details.Subtotal = fmt.Sprintf("%.2f", productAmount)
 
-	var amount = productAmount + productTax + order.Shipping
+	var amount = productAmount + productTax + order.Shipping - order.Discount
 	transaction.Amount.Total = fmt.Sprintf("%.2f", amount)
 
 	p.Transactions = []*paypal.Transaction{transaction}

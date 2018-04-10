@@ -51,7 +51,7 @@ func (this *WXPay) CreateTradeOrder(order *Order) (url string, err error) {
 		subject = order.OrderNo
 	}
 
-	var amount = int((productAmount + productTax + order.Shipping) * 100)
+	var amount = int((productAmount + productTax + order.Shipping - order.Discount) * 100)
 
 	switch order.TradeMethod {
 	case K_TRADE_METHOD_WAP:

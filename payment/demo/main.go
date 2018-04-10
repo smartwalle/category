@@ -109,7 +109,11 @@ func main() {
 		p.TradeMethod = method
 		p.OrderNo = xid.NewXID().Hex()
 		p.Currency = "USD"
-		p.AddProduct("test", "sku001", 1, 1.01, 0)
+		p.Discount = 10
+		p.Shipping = 3333
+		for i:=0;i<3;i++ {
+			p.AddProduct("test", "sku001", 1, 10, 0)
+		}
 		p.Timeout = 3
 
 		var url, err = ps.CreatePayment(channel, p)
