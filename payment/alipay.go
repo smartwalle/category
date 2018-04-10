@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+const (
+	K_CHANNEL_ALIPAY = "alipay"
+)
+
 type AliPay struct {
 	client    *alipay.AliPay
 	ReturnURL string // 支付成功之后回调 URL

@@ -10,6 +10,10 @@ import (
 )
 
 const (
+	K_CHANNEL_WXPAY  = "wxpay"
+)
+
+const (
 	k_WXPAY_NOTIFY_TYPE_TRADE  = "trade"
 	k_WXPAY_NOTIFY_TYPE_REFUND = "refund"
 )

@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+const (
+	K_CHANNEL_PAYPAL = "paypal"
+)
+
 type PayPal struct {
 	client              *paypal.PayPal
 	ReturnURL           string // 支付成功之后回调 URL

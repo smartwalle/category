@@ -10,12 +10,6 @@ const (
 	K_TRADE_METHOD_F2F    = "f2f"     // 扫描用户的付款码进行收款
 )
 
-const (
-	K_CHANNEL_ALIPAY = "alipay"
-	K_CHANNEL_WXPAY  = "wxpay"
-	K_CHANNEL_PAYPAL = "paypal"
-)
-
 type PayChannel interface {
 	Identifier() string
 	CreateTradeOrder(order *Order) (url string, err error)
