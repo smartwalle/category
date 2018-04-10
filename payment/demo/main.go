@@ -109,10 +109,9 @@ func main() {
 		p.TradeMethod = method
 		p.OrderNo = xid.NewXID().Hex()
 		p.Currency = "USD"
-		p.Discount = 10
-		p.Shipping = 3333
+		p.Discount = 10.33
 		for i := 0; i < 3; i++ {
-			p.AddProduct("test", "sku001", 1, 10, 0)
+			p.AddProduct("test", "sku001", 1, 14.99, 0)
 		}
 		p.Timeout = 3
 
