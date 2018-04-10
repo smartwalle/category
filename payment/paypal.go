@@ -5,7 +5,6 @@ import (
 	"github.com/smartwalle/ngx"
 	"github.com/smartwalle/paypal"
 	"net/http"
-	"github.com/smartwalle/going/convert"
 )
 
 const (
@@ -56,11 +55,9 @@ func (this *PayPal) CreateTradeOrder(order *Order) (url string, err error) {
 	transaction.Amount.Currency = order.Currency
 	transaction.Amount.Details = &paypal.AmountDetails{}
 	transaction.Amount.Details.HandlingFee = "0"
-	transaction.Amount.Details.ShippingDiscount = "0"
 	transaction.Amount.Details.Insurance = "0"
-	transaction.Amount.Details.Shipping = order.Shipping
-
 	transaction.ItemList = &paypal.ItemList{}
+
 	if order.ShippingAddress != nil {
 		transaction.ItemList.ShippingAddress = &paypal.ShippingAddress{}
 		transaction.ItemList.ShippingAddress.Line1 = order.ShippingAddress.Line1
@@ -72,12 +69,31 @@ func (this *PayPal) CreateTradeOrder(order *Order) (url string, err error) {
 		transaction.ItemList.ShippingAddress.Phone = order.ShippingAddress.Phone
 	}
 
-	var amount = convert.Float64(order.Amount)
-	var shipping = convert.Float64(order.Shipping)
-	var subTotal = fmt.Sprintf("%.2f", amount - shipping)
+	var items = make([]*paypal.Item, 0, 0)
+	var productAmount float64 = 0
+	var productTax float64 = 0
+	for _, p := range order.ProductList {
+		var item = &paypal.Item{}
+		item.Name = p.Name
+		item.Quantity = fmt.Sprintf("%d", p.Quantity)
+		item.Price = fmt.Sprintf("%.2f", p.Price)
+		item.Tax = fmt.Sprintf("%.2f", p.Tax)
+		item.SKU = p.SKU
+		item.Currency = order.Currency
+		items = append(items, item)
 
-	transaction.Amount.Details.Subtotal = subTotal
-	transaction.Amount.Total = order.Amount
+		productAmount += p.Price * float64(p.Quantity)
+		productTax += p.Tax * float64(p.Quantity)
+	}
+	transaction.ItemList.Items = items
+
+	transaction.Amount.Details.Shipping = fmt.Sprintf("%.2f", order.Shipping)
+	transaction.Amount.Details.ShippingDiscount = fmt.Sprintf("%.2f", order.Discount)
+	transaction.Amount.Details.Tax = fmt.Sprintf("%.2f", productTax)
+	transaction.Amount.Details.Subtotal = fmt.Sprintf("%.2f", productAmount)
+
+	var amount = productAmount + productTax + order.Shipping - order.Discount
+	transaction.Amount.Total = fmt.Sprintf("%.2f", amount)
 
 	p.Transactions = []*paypal.Transaction{transaction}
 

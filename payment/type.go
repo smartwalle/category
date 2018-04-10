@@ -28,17 +28,36 @@ type ShippingAddress struct {
 	State       string
 }
 
+type Product struct {
+	Name     string
+	SKU      string
+	Quantity int
+	Price    float64 // 商品单价
+	Tax      float64 // 商品税费
+}
+
 type Order struct {
 	OrderNo         string           // 必须 - 订单编号
 	Subject         string           // 必须 - 订单主题
-	Amount          string           // 需要支付的总金额(包含运费)
-	Shipping        string           // 运费（PayPal）
+	Shipping        float64          // 运费
+	Discount        float64          // 减免金额
+	ProductList     []*Product       // 商品列表
 	Currency        string           // 货币名称，例如 USD（PayPal）
 	ShippingAddress *ShippingAddress // 收货地址信息（PayPal）
 	AuthCode        string           // 支付授权码，扫描用户的付款码获取（支付宝）
 	TradeMethod     string           // 支付方式（支付宝）
 	IP              string           // 用户端 IP（微信支付）
 	Timeout         int              // 支付超时时间，单位为分钟（支付宝、微信支付）
+}
+
+func (this *Order) AddProduct(name, sku string, quantity int, price, tax float64) {
+	var p = &Product{}
+	p.Name = name
+	p.SKU = sku
+	p.Quantity = quantity
+	p.Price = price
+	p.Tax = tax
+	this.ProductList = append(this.ProductList, p)
 }
 
 type Trade struct {

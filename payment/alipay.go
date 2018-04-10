@@ -7,7 +7,6 @@ import (
 	"github.com/smartwalle/ngx"
 	"net/http"
 	"strings"
-	"github.com/smartwalle/going/convert"
 )
 
 const (
@@ -32,11 +31,18 @@ func (this *AliPay) Identifier() string {
 }
 
 func (this *AliPay) CreateTradeOrder(order *Order) (url string, err error) {
+	var productAmount float64 = 0
+	var productTax float64 = 0
+	for _, p := range order.ProductList {
+		productAmount += p.Price * float64(p.Quantity)
+		productTax += p.Tax * float64(p.Quantity)
+	}
 	var subject = strings.TrimSpace(order.Subject)
 	if subject == "" {
 		subject = order.OrderNo
 	}
-	var amount = fmt.Sprintf("%.2f", convert.Float64(order.Amount))
+
+	var amount = fmt.Sprintf("%.2f", productAmount+productTax+order.Shipping-order.Discount)
 
 	switch order.TradeMethod {
 	case K_TRADE_METHOD_WAP:
@@ -70,6 +76,7 @@ func (this *AliPay) tradeWebPay(orderNo, subject, amount string, timeout int) (u
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	p.Subject = subject
 	p.TotalAmount = amount
+
 	if timeout > 0 {
 		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
 	}

@@ -7,11 +7,10 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"github.com/smartwalle/going/convert"
 )
 
 const (
-	K_CHANNEL_WXPAY  = "wxpay"
+	K_CHANNEL_WXPAY = "wxpay"
 )
 
 const (
@@ -41,11 +40,18 @@ func (this *WXPay) Identifier() string {
 }
 
 func (this *WXPay) CreateTradeOrder(order *Order) (url string, err error) {
+	var productAmount float64 = 0
+	var productTax float64 = 0
+	for _, p := range order.ProductList {
+		productAmount += p.Price * float64(p.Quantity)
+		productTax += p.Tax * float64(p.Quantity)
+	}
 	var subject = strings.TrimSpace(order.Subject)
 	if subject == "" {
 		subject = order.OrderNo
 	}
-	var amount = int(convert.Float64(order.Amount) * 100)
+
+	var amount = int((productAmount + productTax + order.Shipping - order.Discount) * 100)
 
 	switch order.TradeMethod {
 	case K_TRADE_METHOD_WAP:
