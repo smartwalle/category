@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+const (
+	k_WXPAY_NOTIFY_TYPE_TRADE  = "trade"
+	k_WXPAY_NOTIFY_TYPE_REFUND = "refund"
+)
+
 type WXPay struct {
 	location  *time.Location
 	client    *wxpay.WXPay
@@ -63,6 +68,7 @@ func (this *WXPay) trade(tradeType, orderNo, subject, ip string, amount, timeout
 	var notifyURL = ngx.MustURL(this.NotifyURL)
 	notifyURL.Add("channel", this.Identifier())
 	notifyURL.Add("order_no", orderNo)
+	notifyURL.Add("notify_type", k_WXPAY_NOTIFY_TYPE_TRADE)
 	p.NotifyURL = notifyURL.String()
 
 	p.TradeType = tradeType
@@ -122,7 +128,8 @@ func (this *WXPay) getTrade(tradeNo, orderNo string) (result *Trade, err error) 
 	}
 
 	result = &Trade{}
-	result.Platform = this.Identifier()
+	result.Channel = this.Identifier()
+	result.RawTrade = rsp
 	result.OrderNo = rsp.OutTradeNo
 	result.TradeNo = rsp.TransactionId
 	result.TradeStatus = rsp.TradeState
@@ -148,9 +155,22 @@ func (this *WXPay) NotifyHandler(req *http.Request) (result *Notification, err e
 		return nil, err
 	}
 
-	fmt.Println(noti.OutTradeNo, noti.AppId)
+	req.ParseForm()
+	var notifyType = req.FormValue("notify_type")
 
-	// TODO 需要判断通知类型
+	result = &Notification{}
+	result.Channel = this.Identifier()
+	result.RawNotify = noti
+
+	// TODO 需要处理退款
+	switch notifyType {
+	case k_WXPAY_NOTIFY_TYPE_TRADE:
+		result.NotifyType = K_NOTIFY_TYPE_TRADE
+		result.OrderNo = noti.OutTradeNo
+		result.TradeNo = noti.TransactionId
+	case k_WXPAY_NOTIFY_TYPE_REFUND:
+		result.NotifyType = K_NOTIFY_TYPE_REFUND
+	}
 
 	return result, nil
 }

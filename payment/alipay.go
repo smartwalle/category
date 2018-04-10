@@ -198,7 +198,8 @@ func (this *AliPay) getTrade(tradeNo, orderNo string) (result *Trade, err error)
 	}
 
 	result = &Trade{}
-	result.Platform = this.Identifier()
+	result.Channel = this.Identifier()
+	result.RawTrade = rsp
 	result.OrderNo = rsp.AliPayTradeQuery.OutTradeNo
 	result.TradeNo = rsp.AliPayTradeQuery.TradeNo
 	result.TradeStatus = rsp.AliPayTradeQuery.TradeStatus
@@ -233,7 +234,17 @@ func (this *AliPay) NotifyHandler(req *http.Request) (result *Notification, err 
 		return nil, ErrUnknownNotification
 	}
 
-	// TODO 需要判断通知类型
+	result = &Notification{}
+	result.Channel = this.Identifier()
+	result.RawNotify = noti
+
+	// TODO 需要处理退款
+	switch noti.NotifyType {
+	case alipay.K_NOTIFY_TYPE_TRADE_STATUS_SYNC:
+		result.NotifyType = K_NOTIFY_TYPE_TRADE
+		result.OrderNo = noti.OutTradeNo
+		result.TradeNo = noti.TradeNo
+	}
 
 	return result, err
 }

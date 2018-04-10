@@ -128,7 +128,8 @@ func (this *PayPal) GetTrade(tradeNo string) (result *Trade, err error) {
 	}
 
 	result = &Trade{}
-	result.Platform = this.Identifier()
+	result.Channel = this.Identifier()
+	result.RawTrade = rsp
 	result.TradeNo = rsp.Id
 	result.TradeStatus = string(rsp.State)
 
@@ -158,5 +159,28 @@ func (this *PayPal) GetTradeWithOrderNo(orderNo string) (result *Trade, err erro
 }
 
 func (this *PayPal) NotifyHandler(req *http.Request) (result *Notification, err error) {
-	return result, err
+	event, err := this.client.GetWebhookEvent(this.WebHookId, req)
+	if err != nil {
+		return nil, err
+	}
+
+	result = &Notification{}
+	result.Channel = this.Identifier()
+	result.RawNotify = event
+
+	// TODO 需要处理退款
+	switch event.ResourceType {
+	case paypal.K_EVENT_RESOURCE_TYPE_SALE:
+		result.NotifyType = K_NOTIFY_TYPE_TRADE
+		result.OrderNo = event.Sale().InvoiceNumber
+		result.TradeNo = event.Sale().ParentPayment
+	case paypal.K_EVENT_RESOURCE_TYPE_REFUND:
+		result.NotifyType = K_NOTIFY_TYPE_REFUND
+		result.OrderNo = event.Refund().InvoiceNumber
+		result.TradeNo = event.Refund().ParentPayment
+	case paypal.K_EVENT_RESOURCE_TYPE_DISPUTE:
+		result.NotifyType = K_NOTIFY_TYPE_DISPUTE
+		result.OrderNo = event.Dispute().DisputedTransactions[0].InvoiceNumber
+	}
+	return result, nil
 }

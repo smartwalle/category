@@ -66,7 +66,7 @@ func (this *Order) AddProduct(name, sku string, quantity int, price, tax float64
 }
 
 type Trade struct {
-	Platform     string `json:"channels"`
+	Channel      string `json:"channel"`
 	OrderNo      string `json:"order_no"`
 	TradeNo      string `json:"trade_no"`
 	TradeStatus  string `json:"trade_status"`
@@ -74,7 +74,21 @@ type Trade struct {
 	PayerId      string `json:"payer_id"`
 	PayerEmail   string `json:"payer_email"`
 	TotalAmount  string `json:"total_amount"`
+
+	RawTrade interface{} `json:"raw_trade"`
 }
 
+const (
+	K_NOTIFY_TYPE_TRADE   = "trade"
+	K_NOTIFY_TYPE_REFUND  = "refund"
+	K_NOTIFY_TYPE_DISPUTE = "dispute" // PayPal
+)
+
 type Notification struct {
+	Channel    string `json:"channel"`
+	NotifyType string `json:"notify_type"`
+	OrderNo    string `json:"order_no"`
+	TradeNo    string `json:"trade_no"`
+
+	RawNotify interface{} `json:"raw_notify"`
 }

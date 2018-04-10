@@ -55,33 +55,40 @@ vTlWbWwZHVDP85dioLE9mfo5+Hh3SmHDi3TaVXjxeJsUgHkRgOX7
 
 func main() {
 	var ap = payment.NewAliPay(appID, partnerID, aliPublicKey, privateKey, false)
-	ap.ReturnURL = "http://tw.smartwalle.tk:5000/return"
-	ap.CancelURL = "http://tw.smartwalle.tk:5000/cancel"
-	ap.NotifyURL = "http://tw.smartwalle.tk:5000/notify"
+	ap.ReturnURL = "http://tw.smartwalle.tk/pay/return"
+	ap.CancelURL = "http://tw.smartwalle.tk/pay/cancel"
+	ap.NotifyURL = "http://tw.smartwalle.tk/pay/notify"
 
 	var pp = payment.NewPayPal("AS8XSa9JrOJ3rf0kxVqCgRLIlMpgaKhLTShpYxISysR1VpnN6AMLfrvj-upOMuNkXdb9bTIzsFH4umB5", "ECA3_usif2DUgGxgcBTddOKgg2rbjUT7J3B3-Ud9z9y54AK9mYTDDFyadmMLSo1QOiO2rci99FSq1PbZ", false)
-	pp.ReturnURL = "http://tw.smartwalle.tk:5000/return"
-	pp.CancelURL = "http://tw.smartwalle.tk:5000/cancel"
+	pp.ReturnURL = "http://tw.smartwalle.tk/pay/return"
+	pp.CancelURL = "http://tw.smartwalle.tk/pay/cancel"
+	pp.WebHookId = "6WJ221414R474672F"
 
 	var wp = payment.NewWXPal("wx20fa044851046bbf", "1v4h5g4s8u1x25tf451d025e10geagf2", "1299730801", false)
-	wp.NotifyURL = "http://tw.smartwalle.tk:5000/notify"
+	wp.NotifyURL = "http://tw.smartwalle.tk/pay/notify"
 
 	var ps = payment.NewService()
 	ps.RegisterChannel(ap)
 	ps.RegisterChannel(pp)
 	ps.RegisterChannel(wp)
 
-	http.HandleFunc("/notify", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/pay/notify", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("notification", req.FormValue("channel"), req.FormValue("order_no"))
 
-		ps.NotifyURLHandler(req)
+		var noti, err = ps.NotifyURLHandler(req)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		notiByte, _ := json.Marshal(noti)
+		fmt.Println(string(notiByte))
 	})
 
-	http.HandleFunc("/cancel", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/pay/cancel", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("cancel", req.FormValue("channel"), req.FormValue("order_no"))
 	})
 
-	http.HandleFunc("/return", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/pay/return", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("return", req.FormValue("channel"), req.FormValue("order_no"))
 
 		trade, err := ps.ReturnURLHandler(req)
