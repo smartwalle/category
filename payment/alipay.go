@@ -7,6 +7,7 @@ import (
 	"github.com/smartwalle/ngx"
 	"net/http"
 	"strings"
+	"github.com/smartwalle/going/convert"
 )
 
 const (
@@ -31,18 +32,11 @@ func (this *AliPay) Identifier() string {
 }
 
 func (this *AliPay) CreateTradeOrder(order *Order) (url string, err error) {
-	var productAmount float64 = 0
-	var productTax float64 = 0
-	for _, p := range order.ProductList {
-		productAmount += p.Price * float64(p.Quantity)
-		productTax += p.Tax * float64(p.Quantity)
-	}
 	var subject = strings.TrimSpace(order.Subject)
 	if subject == "" {
 		subject = order.OrderNo
 	}
-
-	var amount = productAmount + productTax + order.Shipping
+	var amount = fmt.Sprintf("%.2f", convert.Float64(order.Amount))
 
 	switch order.TradeMethod {
 	case K_TRADE_METHOD_WAP:
@@ -59,7 +53,7 @@ func (this *AliPay) CreateTradeOrder(order *Order) (url string, err error) {
 	return "", err
 }
 
-func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64, timeout int) (url string, err error) {
+func (this *AliPay) tradeWebPay(orderNo, subject, amount string, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradePagePay{}
 	p.OutTradeNo = orderNo
 
@@ -75,8 +69,7 @@ func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64, timeout
 
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	p.Subject = subject
-	p.TotalAmount = fmt.Sprintf("%.2f", amount)
-	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	p.TotalAmount = amount
 	if timeout > 0 {
 		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
 	}
@@ -88,7 +81,7 @@ func (this *AliPay) tradeWebPay(orderNo, subject string, amount float64, timeout
 	return rawURL.String(), err
 }
 
-func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64, timeout int) (url string, err error) {
+func (this *AliPay) tradeWapPay(orderNo, subject, amount string, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradeWapPay{}
 	p.OutTradeNo = orderNo
 
@@ -109,7 +102,7 @@ func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64, timeout
 
 	p.ProductCode = "QUICK_WAP_WAY"
 	p.Subject = subject
-	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	p.TotalAmount = amount
 	if timeout > 0 {
 		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
 	}
@@ -121,7 +114,7 @@ func (this *AliPay) tradeWapPay(orderNo, subject string, amount float64, timeout
 	return rawURL.String(), err
 }
 
-func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64, timeout int) (url string, err error) {
+func (this *AliPay) tradeAppPay(orderNo, subject, amount string, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradeAppPay{}
 	p.OutTradeNo = orderNo
 
@@ -132,14 +125,14 @@ func (this *AliPay) tradeAppPay(orderNo, subject string, amount float64, timeout
 
 	p.ProductCode = "QUICK_MSECURITY_PAY"
 	p.Subject = subject
-	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	p.TotalAmount = amount
 	if timeout > 0 {
 		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
 	}
 	return this.client.TradeAppPay(p)
 }
 
-func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64, timeout int) (url string, err error) {
+func (this *AliPay) tradeQRCode(orderNo, subject, amount string, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradePreCreate{}
 	p.OutTradeNo = orderNo
 
@@ -149,7 +142,7 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64, timeout
 	p.NotifyURL = notifyURL.String()
 
 	p.Subject = subject
-	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	p.TotalAmount = amount
 	if timeout > 0 {
 		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
 	}
@@ -164,7 +157,7 @@ func (this *AliPay) tradeQRCode(orderNo, subject string, amount float64, timeout
 	return rsp.AliPayPreCreateResponse.QRCode, err
 }
 
-func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount float64, timeout int) (url string, err error) {
+func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject, amount string, timeout int) (url string, err error) {
 	var p = alipay.AliPayTradePay{}
 	p.OutTradeNo = orderNo
 
@@ -175,7 +168,7 @@ func (this *AliPay) tradeFaceToFace(orderNo, authCode, subject string, amount fl
 
 	p.AuthCode = authCode
 	p.Subject = subject
-	p.TotalAmount = fmt.Sprintf("%.2f", amount)
+	p.TotalAmount = amount
 	p.Scene = "bar_code"
 	if timeout > 0 {
 		p.TimeoutExpress = fmt.Sprintf("%dm", timeout)
