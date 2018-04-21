@@ -9,7 +9,7 @@ import (
 
 func main() {
 	var db, _ = sql.Open("mysql", "")
-	var cm = category.NewManager(db, "category")
+	var cm = category.New(db, "category")
 
 	categoryList, err := cm.GetCategoryList(47, 0, 0)
 	if err != nil {
