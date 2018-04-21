@@ -83,15 +83,15 @@ func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, n
 		}
 	}
 	if name != "" {
-		sb.Where("c.name = ?", name)
+		var keyword = "%"+name+"%"
+		sb.Where("c.name LIKE ?", keyword)
 	}
 	sb.OrderBy("c.type", "c.left_value")
 	if limit > 0 {
 		sb.Limit(limit)
 	}
 
-	err = sb.Scan(this.db, &result)
-	if err != nil {
+	if err = sb.Scan(this.db, &result); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -152,8 +152,7 @@ func (this *Manager) getPathList(id int64, status int, includeLastNode bool) (re
 		sb.Where("pc.status = ?", status)
 	}
 	sb.OrderBy("pc.left_value")
-	err = sb.Scan(this.db, &result)
-	if err != nil {
+	if err = sb.Scan(this.db, &result); err != nil {
 		return nil, err
 	}
 	return result, nil
