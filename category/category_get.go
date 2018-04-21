@@ -83,7 +83,7 @@ func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, n
 		}
 	}
 	if name != "" {
-		var keyword = "%"+name+"%"
+		var keyword = "%" + name + "%"
 		sb.Where("c.name LIKE ?", keyword)
 	}
 	sb.OrderBy("c.type", "c.left_value")
