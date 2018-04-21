@@ -4,10 +4,7 @@ import (
 	"github.com/smartwalle/dbs"
 )
 
-// --------------------------------------------------------------------------------
-// GetCategory 获取分类信息
-// id 分类 id
-func (this *Manager) GetCategory(id int64) (result *Category, err error) {
+func (this *manager) getCategory(id int64) (result *Category, err error) {
 	var tx = dbs.MustTx(this.db)
 
 	if result, err = this.getCategoryWithId(tx, id); err != nil {
@@ -20,7 +17,7 @@ func (this *Manager) GetCategory(id int64) (result *Category, err error) {
 	return result, nil
 }
 
-func (this *Manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, err error) {
+func (this *manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
@@ -32,7 +29,7 @@ func (this *Manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, 
 	return result, nil
 }
 
-func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result *Category, err error) {
+func (this *manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
@@ -47,16 +44,7 @@ func (this *Manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result
 	return result, nil
 }
 
-// GetCategoryAdvList 获取分类列表
-// parentId: 父分类id，当此参数的值大于 0 的时候，将忽略 cType 参数
-// cType: 指定筛选分类的类型
-// status: 指定筛选分类的状态
-// depth: 指定要获取多少级别内的分类
-func (this *Manager) GetCategoryAdvList(parentId int64, cType, status, depth int, name string, limit uint64) (result []*Category, err error) {
-	return this.getCategoryList(parentId, cType, status, depth, name, limit, false)
-}
-
-func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, name string, limit uint64, includeParent bool) (result []*Category, err error) {
+func (this *manager) getCategoryList(parentId int64, cType, status, depth int, name string, limit uint64, includeParent bool) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
 	sb.From(this.table, "AS c")
@@ -97,27 +85,7 @@ func (this *Manager) getCategoryList(parentId int64, cType, status, depth int, n
 	return result, nil
 }
 
-// GetNodeList 获取指定分类的子分类
-func (this *Manager) GetNodeList(parentId int64, status, depth int) (result []*Category, err error) {
-	return this.getCategoryList(parentId, 0, status, depth, "", 0, false)
-}
-
-// GetNodeIdList 获取指定分类的子分类 id 列表
-func (this *Manager) GetNodeIdList(parentId int64, status, depth int) (result []int64, err error) {
-	return this.getIdList(parentId, status, depth, false)
-}
-
-// GetCategoryList 获取指定分类的子分类列表，返回的列表包含指定的分类
-func (this *Manager) GetCategoryList(parentId int64, status, depth int) (result []*Category, err error) {
-	return this.getCategoryList(parentId, 0, status, depth, "", 0, true)
-}
-
-// GetIdList 获取指定分类的子分类 id 列表，返回的 id 列表包含指定的分类
-func (this *Manager) GetIdList(parentId int64, status, depth int) (result []int64, err error) {
-	return this.getIdList(parentId, status, depth, true)
-}
-
-func (this *Manager) getIdList(parentId int64, status, depth int, includeParent bool) (result []int64, err error) {
+func (this *manager) getIdList(parentId int64, status, depth int, includeParent bool) (result []int64, err error) {
 	categoryList, err := this.getCategoryList(parentId, 0, status, depth, "", 0, includeParent)
 	if err != nil {
 		return nil, err
@@ -128,17 +96,7 @@ func (this *Manager) getIdList(parentId int64, status, depth int, includeParent 
 	return result, nil
 }
 
-// GetParentList 获取指定分类的父分类列表
-func (this *Manager) GetParentList(id int64, status int) (result []*Category, err error) {
-	return this.getPathList(id, status, false)
-}
-
-// GetPathList 获取指定分类到 root 分类的完整分类列表，包括自身
-func (this *Manager) GetPathList(id int64, status int) (result []*Category, err error) {
-	return this.getPathList(id, status, true)
-}
-
-func (this *Manager) getPathList(id int64, status int, includeLastNode bool) (result []*Category, err error) {
+func (this *manager) getPathList(id int64, status int, includeLastNode bool) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.ext1", "pc.ext2", "pc.created_on", "pc.updated_on")
 	sb.From(this.table, "AS c")

@@ -9,9 +9,9 @@ type Service struct {
 }
 
 func NewService() *Service {
-	var p = &Service{}
-	p.channels = make(map[string]PayChannel)
-	return p
+	var s = &Service{}
+	s.channels = make(map[string]PayChannel)
+	return s
 }
 
 func (this *Service) RegisterChannel(c PayChannel) {

@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// --------------------------------------------------------------------------------
 const (
 	k_MOVE_CATEGORY_POSITION_ROOT  = 0 // 顶级分类
 	k_MOVE_CATEGORY_POSITION_FIRST = 1 // 列表头部 (子分类)
@@ -14,8 +13,7 @@ const (
 	k_MOVE_CATEGORY_POSITION_RIGHT = 4 // 右边 (兄弟分类)
 )
 
-// UpdateCategory 更新分类信息
-func (this *Manager) UpdateCategory(id int64, name, description, ext1, ext2 string) (err error) {
+func (this *manager) updateCategory(id int64, name, description, ext1, ext2 string) (err error) {
 	var ub = dbs.NewUpdateBuilder()
 	ub.Table(this.table)
 	ub.SET("name", name)
@@ -30,14 +28,14 @@ func (this *Manager) UpdateCategory(id int64, name, description, ext1, ext2 stri
 	return nil
 }
 
-// UpdateCategoryStatus 更新分类状态
+// updateCategoryStatus 更新分类状态
 // id: 被更新分类的 id
 // status: 新的状态
 // updateType:
 // 		0、只更新当前分类的状态，子分类的状态不会受到影响，并且不会改变父子关系；
 // 		1、子分类的状态会一起更新，不会改变父子关系；
 // 		2、子分类的状态不会受到影响，并且所有子分类会向上移动一级（只针对把状态设置为 无效 的时候）；
-func (this *Manager) UpdateCategoryStatus(id int64, status, updateType int) (err error) {
+func (this *manager) updateCategoryStatus(id int64, status, updateType int) (err error) {
 	var sess = this.db
 
 	// 锁表
@@ -121,27 +119,7 @@ func (this *Manager) UpdateCategoryStatus(id int64, status, updateType int) (err
 	return nil
 }
 
-func (this *Manager) MoveToRoot(id int64) (err error) {
-	return this.moveCategory(k_MOVE_CATEGORY_POSITION_ROOT, id, 0)
-}
-
-func (this *Manager) MoveToFirst(id, pid int64) (err error) {
-	return this.moveCategory(k_MOVE_CATEGORY_POSITION_FIRST, id, pid)
-}
-
-func (this *Manager) MoveToLast(id, pid int64) (err error) {
-	return this.moveCategory(k_MOVE_CATEGORY_POSITION_LAST, id, pid)
-}
-
-func (this *Manager) MoveToLeft(id, rid int64) (err error) {
-	return this.moveCategory(k_MOVE_CATEGORY_POSITION_LEFT, id, rid)
-}
-
-func (this *Manager) MoveToRight(id, rid int64) (err error) {
-	return this.moveCategory(k_MOVE_CATEGORY_POSITION_RIGHT, id, rid)
-}
-
-func (this *Manager) moveCategory(position int, id, rid int64) (err error) {
+func (this *manager) moveCategory(position int, id, rid int64) (err error) {
 	if id == rid {
 		return ErrParentNotAllowed
 	}
@@ -234,7 +212,7 @@ func (this *Manager) moveCategory(position int, id, rid int64) (err error) {
 	return nil
 }
 
-func (this *Manager) moveCategoryWithPosition(tx *dbs.Tx, position int, category, referCategory *Category, updateIdList []int64) (err error) {
+func (this *manager) moveCategoryWithPosition(tx *dbs.Tx, position int, category, referCategory *Category, updateIdList []int64) (err error) {
 	var nodeLen = category.RightValue - category.LeftValue + 1
 
 	// 把要移动的节点及其子节点从原树中删除掉
@@ -278,7 +256,7 @@ func (this *Manager) moveCategoryWithPosition(tx *dbs.Tx, position int, category
 	return ErrUnknownPosition
 }
 
-func (this *Manager) moveToFirst(tx *dbs.Tx, category, parent *Category, updateIdList []int64, nodeLen int) (err error) {
+func (this *manager) moveToFirst(tx *dbs.Tx, category, parent *Category, updateIdList []int64, nodeLen int) (err error) {
 	// 移出空间用于存放被移动的节点及其子节点
 	var ubTreeLeft = dbs.NewUpdateBuilder()
 	ubTreeLeft.Table(this.table)
@@ -319,7 +297,7 @@ func (this *Manager) moveToFirst(tx *dbs.Tx, category, parent *Category, updateI
 	return nil
 }
 
-func (this *Manager) moveToLast(tx *dbs.Tx, category, parent *Category, updateIdList []int64, nodeLen int) (err error) {
+func (this *manager) moveToLast(tx *dbs.Tx, category, parent *Category, updateIdList []int64, nodeLen int) (err error) {
 	// 移出空间用于存放被移动的节点及其子节点
 	var ubTreeLeft = dbs.NewUpdateBuilder()
 	ubTreeLeft.Table(this.table)
@@ -360,7 +338,7 @@ func (this *Manager) moveToLast(tx *dbs.Tx, category, parent *Category, updateId
 	return nil
 }
 
-func (this *Manager) moveToLeft(tx *dbs.Tx, category, referCategory *Category, updateIdList []int64, nodeLen int) (err error) {
+func (this *manager) moveToLeft(tx *dbs.Tx, category, referCategory *Category, updateIdList []int64, nodeLen int) (err error) {
 	// 移出空间用于存放被移动的节点及其子节点
 	var ubTreeLeft = dbs.NewUpdateBuilder()
 	ubTreeLeft.Table(this.table)
@@ -401,7 +379,7 @@ func (this *Manager) moveToLeft(tx *dbs.Tx, category, referCategory *Category, u
 	return nil
 }
 
-func (this *Manager) moveToRight(tx *dbs.Tx, category, referCategory *Category, updateIdList []int64, nodeLen int) (err error) {
+func (this *manager) moveToRight(tx *dbs.Tx, category, referCategory *Category, updateIdList []int64, nodeLen int) (err error) {
 	// 移出空间用于存放被移动的节点及其子节点
 	var ubTreeLeft = dbs.NewUpdateBuilder()
 	ubTreeLeft.Table(this.table)
