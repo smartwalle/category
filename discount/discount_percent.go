@@ -1,7 +1,7 @@
 package discount
 
 import (
-	"github.com/smartwalle/going/convert"
+	"github.com/smartwalle/math4go"
 	"sort"
 )
 
@@ -69,11 +69,11 @@ func (this *PercentDiscount) ExecDiscount(items ...Goods) (discount float64) {
 
 		for _, item := range availableItems {
 			var price = item.GetOriginalPrice() * rate
-			item.UpdatePrice(convert.Round(price, 2))
+			item.UpdatePrice(math4go.Round(price, 2))
 		}
 
 		discount = (1 - discount) * amount
 	}
 
-	return convert.Round(discount, 2)
+	return math4go.Round(discount, 2)
 }

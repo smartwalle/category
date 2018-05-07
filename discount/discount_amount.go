@@ -1,8 +1,8 @@
 package discount
 
 import (
-	"github.com/smartwalle/going/convert"
 	"sort"
+	"github.com/smartwalle/math4go"
 )
 
 // AmountDiscount 满减，即满多少直接减去多少
@@ -61,9 +61,9 @@ func (this *AmountDiscount) ExecDiscount(items ...Goods) (discount float64) {
 
 		for _, item := range availableItems {
 			var price = item.GetOriginalPrice() * rate
-			item.UpdatePrice(convert.Round(price, 2))
+			item.UpdatePrice(math4go.Round(price, 2))
 		}
 	}
 
-	return convert.Round(discount, 2)
+	return math4go.Round(discount, 2)
 }
