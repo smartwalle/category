@@ -27,15 +27,14 @@ CREATE TABLE `category` (
   `right_value` int(11) DEFAULT NULL,
   `depth` int(11) DEFAULT NULL,
   `status` int(11) DEFAULT '1000',
-  `ext1` varchar(255) DEFAULT NULL,
-  `ext2` varchar(255) DEFAULT NULL,
+  `ext1` varchar(256) DEFAULT NULL,
+  `ext2` varchar(256) DEFAULT NULL,
   `created_on` datetime DEFAULT NULL,
   `updated_on` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `category_id_uindex` (`id`),
   KEY `category_type_index` (`type`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8
-
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8
 
 ```
 

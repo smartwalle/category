@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-const (
-	k_DATETIME_FORMAT = "2006-01-02 15:04:05 -0700"
-)
-
 // --------------------------------------------------------------------------------
 type Pagination interface {
 	GetKeywords() string
@@ -40,7 +36,7 @@ func (this *Form) CleanedPage(p string) uint64 {
 }
 
 func (this *Form) CleanedBeginTime(p string) *time.Time {
-	var t, err = time.Parse(k_DATETIME_FORMAT, p)
+	var t, err = time.Parse(time.RFC3339, p)
 	if err == nil {
 		t = t.Local()
 		return &t
@@ -49,7 +45,7 @@ func (this *Form) CleanedBeginTime(p string) *time.Time {
 }
 
 func (this *Form) CleanedEndTime(p string) *time.Time {
-	var t, err = time.Parse(k_DATETIME_FORMAT, p)
+	var t, err = time.Parse(time.RFC3339, p)
 	if err == nil {
 		t = t.Local()
 		return &t
