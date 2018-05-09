@@ -94,7 +94,7 @@ func (this *manager) addCategory(cId int64, cType, position int, referTo int64, 
 	return result, nil
 }
 
-func (this *manager) addCategoryWithPosition(tx *dbs.Tx, referCategory *Category,  cId int64, position int, name, description, ext1, ext2 string, status int) (id int64, err error) {
+func (this *manager) addCategoryWithPosition(tx *dbs.Tx, referCategory *Category, cId int64, position int, name, description, ext1, ext2 string, status int) (id int64, err error) {
 	switch position {
 	case k_ADD_CATEGORY_POSITION_ROOT:
 		return this.insertCategoryToRoot(tx, referCategory, cId, name, description, ext1, ext2, status)

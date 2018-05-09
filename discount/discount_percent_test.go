@@ -1,8 +1,8 @@
 package discount
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestPercentDiscount_Amount(t *testing.T) {

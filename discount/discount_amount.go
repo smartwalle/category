@@ -1,8 +1,8 @@
 package discount
 
 import (
-	"sort"
 	"github.com/smartwalle/math4go"
+	"sort"
 )
 
 // AmountDiscount 满减，即满多少直接减去多少

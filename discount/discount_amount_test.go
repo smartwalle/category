@@ -1,8 +1,8 @@
 package discount
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 type Product struct {
@@ -32,7 +32,7 @@ func GetProductList() (result []Goods) {
 	for i := 0; i < 10; i++ {
 		var p = &Product{}
 		p.SKU = fmt.Sprintf("SKU-%d", i)
-		p.Qty = i+1
+		p.Qty = i + 1
 		p.Price = float64(i+1) * 10.0
 		p.SalePrice = p.Price
 		result = append(result, p)
