@@ -86,10 +86,39 @@ func (this *manager) getCategoryList(parentId int64, cType, status, depth int, n
 }
 
 func (this *manager) getIdList(parentId int64, status, depth int, includeParent bool) (result []int64, err error) {
-	categoryList, err := this.getCategoryList(parentId, 0, status, depth, "", 0, includeParent)
-	if err != nil {
+	var sb = dbs.NewSelectBuilder()
+	sb.Selects("c.id")
+	sb.From(this.table, "AS c")
+	if parentId > 0 {
+		if includeParent {
+			sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value <= c.left_value AND pc.right_value >= c.right_value")
+		} else {
+			sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value < c.left_value AND pc.right_value > c.right_value")
+		}
+		sb.Where("pc.id = ?", parentId)
+	}
+	if status > 0 {
+		sb.Where("c.status = ?", status)
+	}
+	if depth > 0 {
+		if parentId > 0 {
+			sb.Where("c.depth - pc.depth <= ?", depth)
+		} else {
+			sb.Where("c.depth <= ?", depth)
+		}
+	}
+	sb.OrderBy("c.type", "c.left_value")
+
+	var categoryList []*Category
+	if err = sb.Scan(this.db, &categoryList); err != nil {
 		return nil, err
 	}
+
+	// 为减少数据传输，所以调整为只查询 id 字段
+	//categoryList, err := this.getCategoryList(parentId, 0, status, depth, "", 0, includeParent)
+	//if err != nil {
+	//	return nil, err
+	//}
 	for _, c := range categoryList {
 		result = append(result, c.Id)
 	}
