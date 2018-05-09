@@ -6,7 +6,7 @@ type Service struct {
 	m *manager
 }
 
-func NewSercie(db dbs.DB, table string) *Service {
+func NewService(db dbs.DB, table string) *Service {
 	var s = &Service{}
 	var m = &manager{}
 	m.db = db
