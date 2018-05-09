@@ -190,7 +190,9 @@ func (this *manager) moveCategory(position int, id, rid int64) (err error) {
 	//}
 
 	// 查询出被移动分类的所有子分类
-	children, err := this.GetCategoryList(category.Id, 0, 0)
+	//children, err := this.GetCategoryList(category.Id, 0, 0)
+	children, err := this.getCategoryList(category.Id, 0, 0, 0, "", 0, true)
+
 	if err != nil {
 		return err
 	}
