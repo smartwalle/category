@@ -17,47 +17,47 @@ func NewService(db dbs.DB, table string) *Service {
 
 // --------------------------------------------------------------------------------
 // AddRoot 添加顶级分类
-func (this *Service) AddRoot(cType int, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddRoot(cType int, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(0, cType, k_ADD_CATEGORY_POSITION_ROOT, 0, name, description, status, ext...)
 }
 
-func (this *Service) AddRootWithId(cId int64, cType int, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddRootWithId(cId int64, cType int, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(cId, cType, k_ADD_CATEGORY_POSITION_ROOT, 0, name, description, status, ext...)
 }
 
 // AddToFirst 添加子分类，新添加的子分类位于子分类列表的前面
-func (this *Service) AddToFirst(referTo int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToFirst(referTo int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_FIRST, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToFirstWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToFirstWithId(referTo, cId int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_FIRST, referTo, name, description, status, ext...)
 }
 
 // AddToLast 添加子分类，新添加的子分类位于子分类列表的后面
-func (this *Service) AddToLast(referTo int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToLast(referTo int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_LAST, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToLastWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToLastWithId(referTo, cId int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_LAST, referTo, name, description, status, ext...)
 }
 
 // AddToLeft 添加兄弟分类，新添加的分类位于指定分类的左边(前面)
-func (this *Service) AddToLeft(referTo int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToLeft(referTo int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_LEFT, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToLeftWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToLeftWithId(referTo, cId int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_LEFT, referTo, name, description, status, ext...)
 }
 
 // AddToRight 添加兄弟分类，新添加的分类位于指定分类的右边(后面)
-func (this *Service) AddToRight(referTo int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToRight(referTo int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_RIGHT, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToRightWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToRightWithId(referTo, cId int64, name, description string, status int, ext ...string) (result int64, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_RIGHT, referTo, name, description, status, ext...)
 }
 

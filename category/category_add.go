@@ -24,13 +24,13 @@ const (
 // name: 分类名
 // description: 描述
 // status: 分类状态 1000、有效；2000、无效
-func (this *manager) addCategory(cId int64, cType, position int, referTo int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *manager) addCategory(cId int64, cType, position int, referTo int64, name, description string, status int, ext ...string) (result int64, err error) {
 	var sess = this.db
 
 	// 锁表
 	var lock = dbs.WriteLock(this.table)
 	if _, err = lock.Exec(sess); err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	// 解锁
@@ -40,7 +40,6 @@ func (this *manager) addCategory(cId int64, cType, position int, referTo int64, 
 	}()
 
 	var tx = dbs.MustTx(sess)
-	var newCategoryId int64 = 0
 
 	// 查询出参照分类的信息
 	var referCategory *Category
@@ -48,7 +47,7 @@ func (this *manager) addCategory(cId int64, cType, position int, referTo int64, 
 	if position == k_ADD_CATEGORY_POSITION_ROOT {
 		// 如果是添加顶级分类，那么参照分类为 right value 最大的
 		if referCategory, err = this.getCategoryWithMaxRightValue(tx, cType); err != nil {
-			return nil, err
+			return 0, err
 		}
 
 		// 如果参照分类为 nil，则创建一个虚拟的
@@ -62,11 +61,11 @@ func (this *manager) addCategory(cId int64, cType, position int, referTo int64, 
 		}
 	} else {
 		if referCategory, err = this.getCategoryWithId(tx, referTo); err != nil {
-			return nil, err
+			return 0, err
 		}
 		if referCategory == nil {
 			tx.Rollback()
-			return nil, ErrCategoryNotExists
+			return 0, ErrCategoryNotExists
 		}
 	}
 
@@ -79,17 +78,12 @@ func (this *manager) addCategory(cId int64, cType, position int, referTo int64, 
 		ext2 = ext[1]
 	}
 
-	if newCategoryId, err = this.addCategoryWithPosition(tx, referCategory, cId, position, name, description, ext1, ext2, status); err != nil {
-		return nil, err
-	}
-
-	// 查询出刚刚添加的新分类
-	if result, err = this.getCategoryWithId(tx, newCategoryId); err != nil {
-		return nil, err
+	if result, err = this.addCategoryWithPosition(tx, referCategory, cId, position, name, description, ext1, ext2, status); err != nil {
+		return 0, err
 	}
 
 	if err = tx.Commit(); err != nil {
-		return nil, err
+		return 0, err
 	}
 	return result, nil
 }
