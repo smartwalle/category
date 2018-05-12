@@ -30,7 +30,7 @@ func (this *Service) AddToFirst(referTo int64, name, description string, status 
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_FIRST, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToFirstWithId(referTo int64, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToFirstWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_FIRST, referTo, name, description, status, ext...)
 }
 
@@ -39,7 +39,7 @@ func (this *Service) AddToLast(referTo int64, name, description string, status i
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_LAST, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToLastWithId(referTo int64, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToLastWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_LAST, referTo, name, description, status, ext...)
 }
 
@@ -48,7 +48,7 @@ func (this *Service) AddToLeft(referTo int64, name, description string, status i
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_LEFT, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToLeftWithId(referTo int64, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToLeftWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_LEFT, referTo, name, description, status, ext...)
 }
 
@@ -57,7 +57,7 @@ func (this *Service) AddToRight(referTo int64, name, description string, status 
 	return this.m.addCategory(0, -1, k_ADD_CATEGORY_POSITION_RIGHT, referTo, name, description, status, ext...)
 }
 
-func (this *Service) AddToRightWithId(referTo int64, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
+func (this *Service) AddToRightWithId(referTo, cId int64, name, description string, status int, ext ...string) (result *Category, err error) {
 	return this.m.addCategory(cId, -1, k_ADD_CATEGORY_POSITION_RIGHT, referTo, name, description, status, ext...)
 }
 
