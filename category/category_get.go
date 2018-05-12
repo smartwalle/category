@@ -139,18 +139,18 @@ func (this *manager) getIdList(parentId int64, status, depth int, includeParent 
 
 func (this *manager) getPathList(id int64, status int, includeLastNode bool) (result []*Category, err error) {
 	var sb = dbs.NewSelectBuilder()
-	sb.Selects("pc.id", "pc.type", "pc.name", "pc.description", "pc.left_value", "pc.right_value", "pc.depth", "pc.status", "pc.ext1", "pc.ext2", "pc.created_on", "pc.updated_on")
-	sb.From(this.table, "AS c")
+	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
+	sb.From(this.table, "AS sc")
 	if includeLastNode {
-		sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value <= c.left_value AND pc.right_value >= c.right_value")
+		sb.LeftJoin(this.table, "AS c ON c.type = sc.type AND c.left_value <= sc.left_value AND c.right_value >= sc.right_value")
 	} else {
-		sb.LeftJoin(this.table, "AS pc ON pc.type = c.type AND pc.left_value < c.left_value AND pc.right_value > c.right_value")
+		sb.LeftJoin(this.table, "AS c ON c.type = sc.type AND c.left_value < sc.left_value AND c.right_value > sc.right_value")
 	}
-	sb.Where("c.id = ?", id)
+	sb.Where("sc.id = ?", id)
 	if status > 0 {
-		sb.Where("pc.status = ?", status)
+		sb.Where("c.status = ?", status)
 	}
-	sb.OrderBy("pc.left_value")
+	sb.OrderBy("c.left_value")
 	if err = sb.Scan(this.db, &result); err != nil {
 		return nil, err
 	}
