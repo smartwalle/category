@@ -68,8 +68,8 @@ func (this *Service) GetCategory(id int64) (result *Category, err error) {
 	return this.m.getCategory(id)
 }
 
-func (this *Service) GetCategoryWithName(name string) (result *Category, err error) {
-	return this.m.getCategoryWithName(name)
+func (this *Service) GetCategoryWithName(cType int, name string) (result *Category, err error) {
+	return this.m.getCategoryWithName(cType, name)
 }
 
 // GetCategoryAdvList 获取分类列表
