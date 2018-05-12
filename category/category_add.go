@@ -88,40 +88,40 @@ func (this *manager) addCategory(cId int64, cType, position int, referTo int64, 
 	return result, nil
 }
 
-func (this *manager) addCategoryWithPosition(tx *dbs.Tx, referCategory *Category, cId int64, position int, name, description, ext1, ext2 string, status int) (id int64, err error) {
+func (this *manager) addCategoryWithPosition(tx *dbs.Tx, refer *Category, cId int64, position int, name, description, ext1, ext2 string, status int) (id int64, err error) {
 	switch position {
 	case k_ADD_CATEGORY_POSITION_ROOT:
-		return this.insertCategoryToRoot(tx, referCategory, cId, name, description, ext1, ext2, status)
+		return this.insertCategoryToRoot(tx, refer, cId, name, description, ext1, ext2, status)
 	case k_ADD_CATEGORY_POSITION_FIRST:
-		return this.insertCategoryToFirst(tx, referCategory, cId, name, description, ext1, ext2, status)
+		return this.insertCategoryToFirst(tx, refer, cId, name, description, ext1, ext2, status)
 	case k_ADD_CATEGORY_POSITION_LAST:
-		return this.insertCategoryToLast(tx, referCategory, cId, name, description, ext1, ext2, status)
+		return this.insertCategoryToLast(tx, refer, cId, name, description, ext1, ext2, status)
 	case k_ADD_CATEGORY_POSITION_LEFT:
-		return this.insertCategoryToLeft(tx, referCategory, cId, name, description, ext1, ext2, status)
+		return this.insertCategoryToLeft(tx, refer, cId, name, description, ext1, ext2, status)
 	case k_ADD_CATEGORY_POSITION_RIGHT:
-		return this.insertCategoryToRight(tx, referCategory, cId, name, description, ext1, ext2, status)
+		return this.insertCategoryToRight(tx, refer, cId, name, description, ext1, ext2, status)
 	}
 	tx.Rollback()
 	return 0, ErrUnknownPosition
 }
 
-func (this *manager) insertCategoryToRoot(tx *dbs.Tx, referCategory *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
-	var cType = referCategory.Type
-	var leftValue = referCategory.RightValue + 1
-	var rightValue = referCategory.RightValue + 2
-	var depth = referCategory.Depth
+func (this *manager) insertCategoryToRoot(tx *dbs.Tx, refer *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
+	var cType = refer.Type
+	var leftValue = refer.RightValue + 1
+	var rightValue = refer.RightValue + 2
+	var depth = refer.Depth
 	if id, err = this.insertCategory(tx, cId, cType, name, description, ext1, ext2, leftValue, rightValue, depth, status); err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (this *manager) insertCategoryToFirst(tx *dbs.Tx, referCategory *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
+func (this *manager) insertCategoryToFirst(tx *dbs.Tx, refer *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
 	var ubLeft = dbs.NewUpdateBuilder()
 	ubLeft.Table(this.table)
 	ubLeft.SET("left_value", dbs.SQL("left_value + 2"))
 	ubLeft.SET("updated_on", time.Now())
-	ubLeft.Where("type = ? AND left_value > ?", referCategory.Type, referCategory.LeftValue)
+	ubLeft.Where("type = ? AND left_value > ?", refer.Type, refer.LeftValue)
 	if _, err = tx.ExecUpdateBuilder(ubLeft); err != nil {
 		return 0, err
 	}
@@ -130,23 +130,23 @@ func (this *manager) insertCategoryToFirst(tx *dbs.Tx, referCategory *Category, 
 	ubRight.Table(this.table)
 	ubRight.SET("right_value", dbs.SQL("right_value + 2"))
 	ubRight.SET("updated_on", time.Now())
-	ubRight.Where("type = ? AND right_value > ?", referCategory.Type, referCategory.LeftValue)
+	ubRight.Where("type = ? AND right_value > ?", refer.Type, refer.LeftValue)
 	if _, err = tx.ExecUpdateBuilder(ubRight); err != nil {
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, cId, referCategory.Type, name, description, ext1, ext2, referCategory.LeftValue+1, referCategory.LeftValue+2, referCategory.Depth+1, status); err != nil {
+	if id, err = this.insertCategory(tx, cId, refer.Type, name, description, ext1, ext2, refer.LeftValue+1, refer.LeftValue+2, refer.Depth+1, status); err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (this *manager) insertCategoryToLast(tx *dbs.Tx, referCategory *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
+func (this *manager) insertCategoryToLast(tx *dbs.Tx, refer *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
 	var ubLeft = dbs.NewUpdateBuilder()
 	ubLeft.Table(this.table)
 	ubLeft.SET("left_value", dbs.SQL("left_value + 2"))
 	ubLeft.SET("updated_on", time.Now())
-	ubLeft.Where("type = ? AND left_value > ?", referCategory.Type, referCategory.RightValue)
+	ubLeft.Where("type = ? AND left_value > ?", refer.Type, refer.RightValue)
 	if _, err = tx.ExecUpdateBuilder(ubLeft); err != nil {
 		return 0, err
 	}
@@ -155,24 +155,24 @@ func (this *manager) insertCategoryToLast(tx *dbs.Tx, referCategory *Category, c
 	ubRight.Table(this.table)
 	ubRight.SET("right_value", dbs.SQL("right_value + 2"))
 	ubRight.SET("updated_on", time.Now())
-	ubRight.Where("type = ? AND right_value >= ?", referCategory.Type, referCategory.RightValue)
+	ubRight.Where("type = ? AND right_value >= ?", refer.Type, refer.RightValue)
 	if _, err = tx.ExecUpdateBuilder(ubRight); err != nil {
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, cId, referCategory.Type, name, description, ext1, ext2, referCategory.RightValue, referCategory.RightValue+1, referCategory.Depth+1, status); err != nil {
+	if id, err = this.insertCategory(tx, cId, refer.Type, name, description, ext1, ext2, refer.RightValue, refer.RightValue+1, refer.Depth+1, status); err != nil {
 		return 0, err
 	}
 
 	return id, nil
 }
 
-func (this *manager) insertCategoryToLeft(tx *dbs.Tx, referCategory *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
+func (this *manager) insertCategoryToLeft(tx *dbs.Tx, refer *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
 	var ubLeft = dbs.NewUpdateBuilder()
 	ubLeft.Table(this.table)
 	ubLeft.SET("left_value", dbs.SQL("left_value + 2"))
 	ubLeft.SET("updated_on", time.Now())
-	ubLeft.Where("type = ? AND left_value >= ?", referCategory.Type, referCategory.LeftValue)
+	ubLeft.Where("type = ? AND left_value >= ?", refer.Type, refer.LeftValue)
 	if _, err = tx.ExecUpdateBuilder(ubLeft); err != nil {
 		return 0, err
 	}
@@ -181,23 +181,23 @@ func (this *manager) insertCategoryToLeft(tx *dbs.Tx, referCategory *Category, c
 	ubRight.Table(this.table)
 	ubRight.SET("right_value", dbs.SQL("right_value + 2"))
 	ubRight.SET("updated_on", time.Now())
-	ubRight.Where("type = ? AND right_value >= ?", referCategory.Type, referCategory.LeftValue)
+	ubRight.Where("type = ? AND right_value >= ?", refer.Type, refer.LeftValue)
 	if _, err = tx.ExecUpdateBuilder(ubRight); err != nil {
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, cId, referCategory.Type, name, description, ext1, ext2, referCategory.LeftValue, referCategory.LeftValue+1, referCategory.Depth, status); err != nil {
+	if id, err = this.insertCategory(tx, cId, refer.Type, name, description, ext1, ext2, refer.LeftValue, refer.LeftValue+1, refer.Depth, status); err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (this *manager) insertCategoryToRight(tx *dbs.Tx, referCategory *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
+func (this *manager) insertCategoryToRight(tx *dbs.Tx, refer *Category, cId int64, name, description, ext1, ext2 string, status int) (id int64, err error) {
 	var ubLeft = dbs.NewUpdateBuilder()
 	ubLeft.Table(this.table)
 	ubLeft.SET("left_value", dbs.SQL("left_value + 2"))
 	ubLeft.SET("updated_on", time.Now())
-	ubLeft.Where("type = ? AND left_value > ?", referCategory.Type, referCategory.RightValue)
+	ubLeft.Where("type = ? AND left_value > ?", refer.Type, refer.RightValue)
 	if _, err = tx.ExecUpdateBuilder(ubLeft); err != nil {
 		return 0, err
 	}
@@ -206,12 +206,12 @@ func (this *manager) insertCategoryToRight(tx *dbs.Tx, referCategory *Category, 
 	ubRight.Table(this.table)
 	ubRight.SET("right_value", dbs.SQL("right_value + 2"))
 	ubRight.SET("updated_on", time.Now())
-	ubRight.Where("type = ? AND right_value > ?", referCategory.Type, referCategory.RightValue)
+	ubRight.Where("type = ? AND right_value > ?", refer.Type, refer.RightValue)
 	if _, err = tx.ExecUpdateBuilder(ubRight); err != nil {
 		return 0, err
 	}
 
-	if id, err = this.insertCategory(tx, cId, referCategory.Type, name, description, ext1, ext2, referCategory.RightValue+1, referCategory.RightValue+2, referCategory.Depth, status); err != nil {
+	if id, err = this.insertCategory(tx, cId, refer.Type, name, description, ext1, ext2, refer.RightValue+1, refer.RightValue+2, refer.Depth, status); err != nil {
 		return 0, err
 	}
 	return id, nil
