@@ -68,6 +68,10 @@ func (this *Service) GetCategory(id int64) (result *Category, err error) {
 	return this.m.getCategory(id)
 }
 
+func (this *Service) GetCategoryWithName(name string) (result *Category, err error) {
+	return this.m.getCategoryWithName(name)
+}
+
 // GetCategoryAdvList 获取分类列表
 // parentId: 父分类id，当此参数的值大于 0 的时候，将忽略 cType 参数
 // cType: 指定筛选分类的类型

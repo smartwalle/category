@@ -29,6 +29,18 @@ func (this *manager) getCategoryWithId(tx *dbs.Tx, id int64) (result *Category, 
 	return result, nil
 }
 
+func (this *manager) getCategoryWithName(name string) (result *Category, err error) {
+	var sb = dbs.NewSelectBuilder()
+	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
+	sb.From(this.table, "AS c")
+	sb.Where("c.name = ?", name)
+	sb.Limit(1)
+	if err = sb.Scan(this.db, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (this *manager) getCategoryWithMaxRightValue(tx *dbs.Tx, cType int) (result *Category, err error) {
 	var sb = dbs.NewSelectBuilder()
 	sb.Selects("c.id", "c.type", "c.name", "c.description", "c.left_value", "c.right_value", "c.depth", "c.status", "c.ext1", "c.ext2", "c.created_on", "c.updated_on")
