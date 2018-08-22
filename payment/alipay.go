@@ -20,7 +20,7 @@ type AliPay struct {
 	NotifyURL string
 }
 
-func NewAliPay(appId, partnerId string, aliPublicKey, privateKey []byte, isProduction bool) *AliPay {
+func NewAliPay(appId, partnerId, aliPublicKey, privateKey string, isProduction bool) *AliPay {
 	var p = &AliPay{}
 	p.client = alipay.New(appId, partnerId, aliPublicKey, privateKey, isProduction)
 	return p
